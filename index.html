@@ -28,6 +28,7 @@
     --tape1:#cfe8dd;
     --tape2:#f6c9b8;
     --card:#fffdf7;
+    --muted:#5b6b8c;
   }
   *{box-sizing:border-box;}
   html, body{ height:100%; }
@@ -154,6 +155,19 @@
   .summary{ text-align:center; }
   .summary h2{ font-family:'Kalam', cursive; font-size:2rem; color:var(--ink); margin-bottom:6px; transform:rotate(-1deg); }
   .summary .big-score{ font-family:'Caveat', cursive; font-size:4rem; font-weight:700; color:var(--accent-dark); margin:6px 0; }
+  .stats-grid{
+    display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin:16px 0 8px;
+    text-align:left;
+  }
+  .stats-tile{
+    border:2px dashed #d9cdb0; border-radius:8px; padding:8px 10px; background:#fff9ee;
+  }
+  .stats-tile .label{ font-size:0.8rem; color:var(--ink-soft); }
+  .stats-tile .value{ font-family:'Kalam', cursive; font-size:1.05rem; font-weight:700; color:var(--ink); }
+  .insight-note{
+    margin-top:8px; font-size:0.92rem; color:var(--ink-soft); text-align:left;
+    border-left:3px solid #d9cdb0; padding-left:10px;
+  }
   .breakdown{ text-align:left; margin:20px 0; border-top:2px dashed #d9cdb0; padding-top:16px; }
   .breakdown-row{ display:flex; justify-content:space-between; padding:8px 0; font-size:0.98rem; border-bottom:1px dotted #d9cdb0; }
   .breakdown-row span:last-child{ font-weight:700; font-family:'Kalam', cursive; }
@@ -199,6 +213,7 @@
     .restart-btn{ flex:0 0 auto; }
     .option{ padding:14px 14px; }
     .kbd-hint{ display:none; }
+    .stats-grid{ grid-template-columns:1fr; }
   }
   @media (hover:none){
     .option, button.navbtn{ min-height:44px; }
@@ -254,6 +269,8 @@
       <h2>Quiz Complete!</h2>
       <div class="big-score" id="finalScore">0/0</div>
       <div id="finalMsg" style="color:var(--muted);font-size:0.95rem;"></div>
+      <div class="stats-grid" id="historyStats"></div>
+      <div class="insight-note" id="insightNote" style="display:none;"></div>
       <div class="breakdown" id="breakdown"></div>
       <div class="missed-list" id="missedList"></div>
       <button class="restart" id="restartBtn">Try Again</button>
@@ -653,6 +670,7 @@ function shuffleQuestionOptions(q){
 }
 
 const STORAGE_KEY = "bioQuizProgress_v1";
+const ANALYTICS_KEY = "bioQuizAnalytics_v1";
 
 function saveProgress(){
   try{
@@ -669,6 +687,66 @@ function saveProgress(){
 
 function clearProgress(){
   try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+}
+
+function loadAnalytics(){
+  try{
+    const raw = localStorage.getItem(ANALYTICS_KEY);
+    if(!raw) return {modules:{}};
+    const parsed = JSON.parse(raw);
+    if(!parsed || typeof parsed !== "object" || typeof parsed.modules !== "object") return {modules:{}};
+    return parsed;
+  }catch(e){
+    return {modules:{}};
+  }
+}
+
+function saveAnalytics(analytics){
+  try{ localStorage.setItem(ANALYTICS_KEY, JSON.stringify(analytics)); }catch(e){}
+}
+
+function recordModuleAttempt(payload){
+  const analytics = loadAnalytics();
+  const key = String(currentModuleIndex);
+  if(!analytics.modules[key]) analytics.modules[key] = {attempts:[]};
+  analytics.modules[key].attempts.push(payload);
+  analytics.modules[key].attempts = analytics.modules[key].attempts.slice(-25);
+  saveAnalytics(analytics);
+}
+
+function renderHistoryStats(correct, total, topicStats){
+  const statsGrid = document.getElementById("historyStats");
+  const note = document.getElementById("insightNote");
+  const analytics = loadAnalytics();
+  const attempts = (((analytics.modules || {})[String(currentModuleIndex)] || {}).attempts) || [];
+  if(attempts.length === 0){
+    statsGrid.innerHTML = "";
+    note.style.display = "none";
+    return;
+  }
+
+  const bestPct = Math.max(...attempts.map(a => a.pct));
+  const avgPct = Math.round(attempts.reduce((sum, a) => sum + a.pct, 0) / attempts.length);
+  const last = attempts[attempts.length - 1];
+  const prev = attempts.length > 1 ? attempts[attempts.length - 2] : null;
+  const delta = prev ? (last.pct - prev.pct) : 0;
+  const deltaText = prev ? `${delta >= 0 ? "+" : ""}${delta}% vs last run` : "first tracked run";
+  const attemptedTopics = Object.keys(topicStats).length;
+
+  statsGrid.innerHTML = `
+    <div class="stats-tile"><div class="label">Attempts</div><div class="value">${attempts.length}</div></div>
+    <div class="stats-tile"><div class="label">Best score</div><div class="value">${bestPct}%</div></div>
+    <div class="stats-tile"><div class="label">Average score</div><div class="value">${avgPct}%</div></div>
+    <div class="stats-tile"><div class="label">Topics in this run</div><div class="value">${attemptedTopics}</div></div>
+  `;
+
+  const weakestTopic = Object.entries(topicStats)
+    .map(([topic, s]) => ({topic, pct: Math.round((s.correct / s.total) * 100)}))
+    .sort((a,b)=>a.pct-b.pct)[0];
+  note.textContent = weakestTopic
+    ? `Session trend: ${deltaText}. Focus area: ${weakestTopic.topic} (${weakestTopic.pct}% this run).`
+    : `Session trend: ${deltaText}.`;
+  note.style.display = "block";
 }
 
 function loadProgress(){
@@ -945,6 +1023,15 @@ function showSummary(){
       missedDiv.appendChild(item);
     });
   }
+
+  recordModuleAttempt({
+    at: new Date().toISOString(),
+    correct,
+    total: quizQuestions.length,
+    pct,
+    missed: missed.length
+  });
+  renderHistoryStats(correct, quizQuestions.length, topicStats);
 }
 
 document.getElementById("restartBtn").onclick = ()=>{
