@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,115 +8,173 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f172a">
 <title>Biology for Engineers — Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Patrick+Hand&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0f172a;
-    --card:#ffffff;
-    --accent:#2563eb;
-    --accent-dark:#1d4ed8;
-    --good:#16a34a;
-    --bad:#dc2626;
-    --text:#1e293b;
-    --muted:#64748b;
+    --paper:#faf6ea;
+    --paper-line:#c9dcec;
+    --margin-line:#f0a8a8;
+    --ink:#2b3a55;
+    --ink-soft:#5b6b8c;
+    --accent:#3d6fb4;
+    --accent-dark:#2a5290;
+    --good:#3f8f5f;
+    --good-bg:#e4f3e6;
+    --bad:#c9564a;
+    --bad-bg:#fbe6e2;
+    --highlight:#ffe988;
+    --tape1:#cfe8dd;
+    --tape2:#f6c9b8;
+    --card:#fffdf7;
   }
   *{box-sizing:border-box;}
+  html, body{ height:100%; }
   body{
     margin:0;
-    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
-    background:linear-gradient(135deg,#0f172a,#1e3a5f);
+    font-family:'Patrick Hand', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      repeating-linear-gradient(var(--paper) 0px, var(--paper) 27px, var(--paper-line) 28px),
+      linear-gradient(90deg, transparent 46px, var(--margin-line) 47px, var(--margin-line) 48px, transparent 49px);
+    background-size: 100% 28px, 100% 100%;
     min-height:100vh;
     min-height:100dvh;
-    padding:24px 12px;
-    padding-top:max(24px, env(safe-area-inset-top));
-    padding-bottom:max(24px, env(safe-area-inset-bottom));
-    padding-left:max(12px, env(safe-area-inset-left));
-    padding-right:max(12px, env(safe-area-inset-right));
+    padding:28px 14px;
+    padding-top:max(28px, env(safe-area-inset-top));
+    padding-bottom:max(28px, env(safe-area-inset-bottom));
+    padding-left:max(14px, env(safe-area-inset-left));
+    padding-right:max(14px, env(safe-area-inset-right));
     display:flex;
     justify-content:center;
     -webkit-tap-highlight-color: transparent;
   }
   .app{ width:100%; max-width:700px; }
-  .header{ text-align:center; color:#fff; margin-bottom:16px; }
-  .header h1{ font-size:1.4rem; margin:0 0 4px; }
-  .header p{ margin:0; color:#cbd5e1; font-size:0.9rem; }
+  .header{ text-align:center; margin-bottom:14px; position:relative; }
+  .header h1{
+    font-family:'Kalam', cursive; font-weight:700;
+    font-size:1.9rem; margin:0 0 2px; color:var(--ink);
+    transform:rotate(-1deg); display:inline-block;
+  }
+  .header p{ margin:0; color:var(--ink-soft); font-size:1rem; }
+  .streak{
+    font-family:'Kalam', cursive; font-size:0.85rem; color:var(--bad);
+    margin-top:4px; min-height:1.2em; font-weight:700;
+  }
   .topbar{
     display:flex; justify-content:space-between; align-items:center;
-    margin-bottom:14px; color:#e2e8f0; font-size:0.85rem; flex-wrap:wrap; gap:8px;
+    margin-bottom:12px; font-size:0.9rem; flex-wrap:wrap; gap:8px;
   }
   select{
-    background:#1e293b; color:#fff; border:1px solid #334155;
-    border-radius:6px; padding:6px 10px; font-size:0.85rem;
+    background:var(--card); color:var(--ink); border:2px solid var(--ink);
+    border-radius:8px; padding:6px 10px; font-size:0.9rem;
+    font-family:'Patrick Hand', sans-serif;
   }
   select:disabled{ opacity:0.5; }
   .dots{
-    display:flex; gap:5px; overflow-x:auto; padding:4px 2px 12px;
+    display:flex; gap:6px; overflow-x:auto; padding:4px 2px 12px;
     scrollbar-width:thin;
   }
   .dot{
     flex:0 0 auto;
-    width:22px; height:22px; border-radius:50%;
+    width:24px; height:24px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
-    font-size:0.65rem; font-weight:700; cursor:pointer;
-    background:#1e293b; color:#94a3b8; border:2px solid transparent;
+    font-size:0.7rem; font-weight:700; cursor:pointer;
+    font-family:'Kalam', cursive;
+    background:var(--card); color:var(--ink-soft); border:2px solid #d9d0bd;
     transition:all .15s ease;
   }
-  .dot.current{ border-color:#fff; }
-  .dot.correct{ background:var(--good); color:#fff; }
-  .dot.wrong{ background:var(--bad); color:#fff; }
+  .dot.current{ border-color:var(--ink); border-style:dashed; transform:scale(1.1); }
+  .dot.correct{ background:var(--good); color:#fff; border-color:var(--good); }
+  .dot.wrong{ background:var(--bad); color:#fff; border-color:var(--bad); }
   .dot:hover{ transform:scale(1.15); }
-  .progress-wrap{ background:#1e293b; border-radius:8px; height:8px; overflow:hidden; margin-bottom:10px; }
-  .progress-bar{ height:100%; background:var(--accent); width:0%; transition:width .3s ease; }
-  .card{ background:var(--card); border-radius:14px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,0.3); }
-  .tag{
-    display:inline-block; background:#eff6ff; color:var(--accent-dark);
-    font-size:0.72rem; font-weight:600; padding:3px 10px; border-radius:999px;
-    margin-bottom:12px; letter-spacing:.03em;
+  .progress-wrap{
+    background:var(--card); border:2px solid var(--ink); border-radius:8px;
+    height:10px; overflow:hidden; margin-bottom:12px;
   }
-  .qtext{ font-size:1.1rem; font-weight:600; color:var(--text); margin-bottom:18px; line-height:1.4; }
+  .progress-bar{ height:100%; background:repeating-linear-gradient(45deg, var(--accent), var(--accent) 6px, var(--accent-dark) 6px, var(--accent-dark) 12px); width:0%; transition:width .3s ease; }
+  .card{
+    background:var(--card); border-radius:3px; padding:26px 24px;
+    border:2px solid var(--ink);
+    box-shadow:5px 5px 0 rgba(43,58,85,0.15);
+    position:relative;
+  }
+  .card::before{
+    content:"";
+    position:absolute; top:-14px; left:28px; width:64px; height:26px;
+    background:var(--tape2); opacity:0.8; transform:rotate(-4deg);
+    box-shadow:0 2px 3px rgba(0,0,0,0.15);
+  }
+  .tag{
+    display:inline-block; background:var(--highlight); color:var(--ink);
+    font-family:'Kalam', cursive; font-size:0.8rem; font-weight:700; padding:3px 12px;
+    border-radius:999px 999px 999px 2px; margin-bottom:14px; letter-spacing:.02em;
+    transform:rotate(-1deg);
+  }
+  .qtext{ font-size:1.3rem; font-weight:400; color:var(--ink); margin-bottom:18px; line-height:1.45; }
   .options{ display:flex; flex-direction:column; gap:10px; }
   .option{
-    text-align:left; padding:12px 14px; border:2px solid #e2e8f0; border-radius:10px;
-    background:#f8fafc; cursor:pointer; font-size:0.95rem; color:var(--text);
-    transition:all .15s ease;
+    text-align:left; padding:12px 16px; border:2px solid var(--ink); border-radius:10px 4px 10px 4px;
+    background:var(--paper); cursor:pointer; font-size:1.05rem; color:var(--ink);
+    font-family:'Patrick Hand', sans-serif;
+    transition:transform .12s ease, background .12s ease, border-color .12s ease;
+    position:relative;
   }
-  .option:hover:not(:disabled){ border-color:var(--accent); background:#eff6ff; }
-  .option.correct{ border-color:var(--good); background:#f0fdf4; color:#15803d; font-weight:600; }
-  .option.wrong{ border-color:var(--bad); background:#fef2f2; color:#b91c1c; font-weight:600; }
-  .option:disabled{ cursor:default; opacity:0.85; }
-  .feedback{ margin-top:14px; font-size:0.9rem; color:var(--muted); min-height:20px; }
+  .option:hover:not(:disabled){ border-color:var(--accent); background:#eef5ff; transform:translateX(2px); }
+  .option.correct{
+    border-color:var(--good); background:var(--good-bg); color:#1f5c37; font-weight:700;
+    box-shadow: 0 0 0 2px var(--good-bg), 0 0 0 4px var(--good);
+    transform:rotate(-0.4deg);
+  }
+  .option.correct::after{ content:" ✓"; font-family:'Kalam', cursive; }
+  .option.wrong{
+    border-color:var(--bad); background:var(--bad-bg); color:#8a2f26; font-weight:700;
+    text-decoration:line-through; text-decoration-color:var(--bad); text-decoration-thickness:3px;
+    transform:rotate(0.6deg);
+  }
+  .option:disabled{ cursor:default; opacity:0.92; }
+  .feedback{ margin-top:14px; font-size:1rem; color:var(--ink-soft); min-height:22px; font-family:'Kalam', cursive; }
   .footer{ display:flex; justify-content:space-between; align-items:center; margin-top:20px; gap:10px; }
   .navbtns{ display:flex; gap:8px; }
   button.navbtn{
-    background:#1e293b; color:#fff; border:none; padding:10px 18px;
-    border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer;
+    background:var(--ink); color:var(--paper); border:2px solid var(--ink); padding:10px 18px;
+    border-radius:8px 8px 8px 2px; font-size:0.95rem; font-weight:700; cursor:pointer;
+    font-family:'Kalam', cursive;
   }
-  button.navbtn:hover:not(:disabled){ background:#334155; }
+  button.navbtn:hover:not(:disabled){ background:var(--accent-dark); border-color:var(--accent-dark); }
   button.navbtn:disabled{ opacity:0.35; cursor:not-allowed; }
-  button.navbtn.next{ background:var(--accent); }
+  button.navbtn.next{ background:var(--accent); border-color:var(--accent-dark); }
   button.navbtn.next:hover:not(:disabled){ background:var(--accent-dark); }
-  .score{ font-size:0.85rem; color:var(--muted); font-weight:600; }
+  .score{ font-size:0.95rem; color:var(--ink-soft); font-weight:700; font-family:'Kalam', cursive; }
   .summary{ text-align:center; }
-  .summary h2{ font-size:1.6rem; color:var(--text); margin-bottom:6px; }
-  .summary .big-score{ font-size:3rem; font-weight:800; color:var(--accent); margin:10px 0; }
-  .breakdown{ text-align:left; margin:20px 0; border-top:1px solid #e2e8f0; padding-top:16px; }
-  .breakdown-row{ display:flex; justify-content:space-between; padding:8px 0; font-size:0.9rem; border-bottom:1px solid #f1f5f9; }
-  .breakdown-row span:last-child{ font-weight:700; }
-  .missed-list{ text-align:left; margin-top:16px; max-height:260px; overflow-y:auto; border-top:1px solid #e2e8f0; padding-top:14px; }
-  .missed-item{ font-size:0.85rem; padding:10px 0; border-bottom:1px solid #f1f5f9; }
-  .missed-item .q{ font-weight:600; color:var(--text); margin-bottom:4px; }
+  .summary h2{ font-family:'Kalam', cursive; font-size:2rem; color:var(--ink); margin-bottom:6px; transform:rotate(-1deg); }
+  .summary .big-score{ font-family:'Caveat', cursive; font-size:4rem; font-weight:700; color:var(--accent-dark); margin:6px 0; }
+  .breakdown{ text-align:left; margin:20px 0; border-top:2px dashed #d9cdb0; padding-top:16px; }
+  .breakdown-row{ display:flex; justify-content:space-between; padding:8px 0; font-size:0.98rem; border-bottom:1px dotted #d9cdb0; }
+  .breakdown-row span:last-child{ font-weight:700; font-family:'Kalam', cursive; }
+  .missed-list{ text-align:left; margin-top:16px; max-height:260px; overflow-y:auto; border-top:2px dashed #d9cdb0; padding-top:14px; }
+  .missed-item{ font-size:0.95rem; padding:10px 0; border-bottom:1px dotted #d9cdb0; }
+  .missed-item .q{ font-weight:700; color:var(--ink); margin-bottom:4px; }
   .missed-item .a{ color:var(--good); }
   .missed-item .y{ color:var(--bad); }
   .restart{
-    margin-top:20px; background:#1e293b; color:#fff; border:none;
-    padding:12px 26px; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer;
+    margin-top:20px; background:var(--accent); color:#fff; border:2px solid var(--accent-dark);
+    padding:12px 26px; border-radius:10px 10px 10px 2px; font-size:1rem; font-weight:700; cursor:pointer;
+    font-family:'Kalam', cursive;
   }
-  .restart:hover{ background:#0f172a; }
-  .hint{ font-size:0.78rem; color:#94a3b8; text-align:center; margin-top:10px; }
+  .restart:hover{ background:var(--accent-dark); }
+  .hint{ font-size:0.85rem; color:var(--ink-soft); text-align:center; margin-top:10px; }
+  .note{
+    font-family:'Caveat', cursive; font-size:1.15rem; color:var(--bad); text-align:center;
+    margin-top:8px; transform:rotate(-1deg); min-height:1.4em;
+  }
 
   @media (max-width:420px){
-    .card{ padding:18px 16px; }
-    .header h1{ font-size:1.2rem; }
-    .qtext{ font-size:1.02rem; }
+    .card{ padding:20px 16px; }
+    .header h1{ font-size:1.6rem; }
+    .qtext{ font-size:1.15rem; }
     .footer{ flex-direction:column; align-items:stretch; }
     .navbtns{ justify-content:space-between; }
     button.navbtn{ flex:1; padding:12px 14px; }
@@ -135,6 +192,7 @@
   <div class="header">
     <h1 id="moduleTitle">Biology for Engineers</h1>
     <p id="moduleSub">Module Quiz</p>
+    <div class="streak" id="streakLine"></div>
   </div>
 
   <div id="quizView">
@@ -158,8 +216,9 @@
         </div>
       </div>
     </div>
+    <div class="note" id="noteLine"></div>
     <div class="hint">Pick an answer — if it's wrong, try again until you find the right one. Your score reflects your <em>first</em> attempt only. Options are shuffled each run, and your progress saves automatically. On a laptop: press 1–4 to answer, ← → to navigate.</div>
-    <div class="hint" style="margin-top:6px;"><a href="#" id="resetLink" style="color:#94a3b8;text-decoration:underline;">Reset saved progress</a></div>
+    <div class="hint" style="margin-top:6px;"><a href="#" id="resetLink" style="color:var(--ink-soft);text-decoration:underline;">Reset saved progress</a></div>
   </div>
 
   <div id="summaryView" style="display:none;">
@@ -399,8 +458,7 @@ const modules = [
       {q:"Brain is protected by", opts:["Muscles","Meninges","Nephrons","Sarcomeres"], ans:1, topic:"Nervous System"},
       {q:"Neurons transmit", opts:["Oxygen","Impulses","Blood","Hormones"], ans:1, topic:"Nervous System"},
       {q:"Neurotransmitters are released from", opts:["Dendrites","Axon terminals","Nucleus","Cytoplasm"], ans:1, topic:"Nervous System"},
-      {q:"The somatic nervous system controls", opts:["Heartbeat","Gland secretion","Voluntary movement","Hormone release"], ans:2, topic:"Nervous System"},
-      {q:"The autonomic nervous system controls", opts:["Voluntary movement","Internal organs involuntarily","Memory","Thinking"], ans:1, topic:"Nervous System"}
+      {q:"The somatic nervous system controls", opts:["Heartbeat","Gland secretion","Voluntary movement","Hormone release"], ans:2, topic:"Nervous System"}
     ]
   },
   {
@@ -542,6 +600,13 @@ let quizQuestions = [];
 let quizState = []; // per-question: {wrongTries:[idx], solvedIndex:null, firstAttempt:null, firstAttemptCorrect:null}
 let currentIndex = 0;
 
+const ENCOURAGEMENTS = [
+  "you've got this →", "keep going, almost there", "nice pace!", "eyes on the prize 📝",
+  "one more, then a stretch break", "you're on a roll", "steady hands, steady mind",
+  "exam brain, activate", "small steps, big syllabus"
+];
+function randomNote(){ return ENCOURAGEMENTS[Math.floor(Math.random()*ENCOURAGEMENTS.length)]; }
+
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -601,6 +666,7 @@ function loadProgress(){
     document.getElementById("summaryView").style.display = "none";
     renderDots();
     renderQuestion();
+    setEncouragement("picking up right where you left off");
     return true;
   }catch(e){ return false; }
 }
@@ -640,6 +706,7 @@ function startQuiz(topic){
   document.getElementById("summaryView").style.display = "none";
   renderDots();
   renderQuestion();
+  setEncouragement("fresh page, clean slate — good luck!");
   saveProgress();
 }
 
@@ -655,9 +722,26 @@ function renderDots(){
     else if(st.firstAttemptCorrect === false) cls += " wrong";
     d.className = cls;
     d.textContent = idx+1;
-    d.onclick = ()=>{ currentIndex = idx; renderQuestion(); };
+    d.onclick = ()=>{ currentIndex = idx; renderQuestion(); setEncouragement(); saveProgress(); };
     dotNav.appendChild(d);
   });
+}
+
+function setEncouragement(customText){
+  const el = document.getElementById("noteLine");
+  if(el) el.textContent = customText || randomNote();
+}
+
+function currentStreak(){
+  // trailing run of first-attempt-correct answers, walking back from the current question
+  let streak = 0;
+  for(let i = currentIndex; i >= 0; i--){
+    const fac = quizState[i].firstAttemptCorrect;
+    if(fac === true) streak++;
+    else if(fac === false) break;
+    // unattempted (null) questions are skipped over, don't break the streak
+  }
+  return streak;
 }
 
 function computeScore(){
@@ -677,12 +761,15 @@ function renderQuestion(){
   document.getElementById("qTopic").textContent = q.topic;
   document.getElementById("qText").textContent = `${currentIndex+1}. ${q.q}`;
   document.getElementById("qFeedback").textContent = st.solvedIndex !== null
-    ? (st.firstAttemptCorrect ? "Correct on first try!" : "Correct answer found — noted as a miss on your first attempt.")
-    : (st.wrongTries.length > 0 ? "Try again — eliminate the wrong ones." : "");
+    ? (st.firstAttemptCorrect ? "✓ Correct on first try!" : "Correct answer found — noted as a miss on your first attempt.")
+    : (st.wrongTries.length > 0 ? "Nope — cross that one out and try again." : "");
 
   const {correct, attempted} = computeScore();
   document.getElementById("liveScore").textContent = `Score: ${correct} / ${attempted}`;
   document.getElementById("progressBar").style.width = `${(attempted/quizQuestions.length)*100}%`;
+
+  const streak = currentStreak();
+  document.getElementById("streakLine").textContent = streak >= 3 ? `🔥 ${streak} in a row` : "";
 
   const optsDiv = document.getElementById("qOptions");
   optsDiv.innerHTML = "";
@@ -733,15 +820,24 @@ function selectAnswer(idx){
 }
 
 document.getElementById("prevBtn").onclick = ()=>{
-  if(currentIndex > 0){ currentIndex--; renderQuestion(); saveProgress(); }
+  if(currentIndex > 0){ currentIndex--; renderQuestion(); setEncouragement(); saveProgress(); }
 };
 
 document.getElementById("nextBtn").onclick = ()=>{
   if(currentIndex >= quizQuestions.length - 1){
+    const unsolvedIdx = quizState.findIndex(st => st.solvedIndex === null);
+    if(unsolvedIdx !== -1){
+      currentIndex = unsolvedIdx;
+      renderQuestion();
+      setEncouragement("hang on — you skipped this one, finish it first");
+      saveProgress();
+      return;
+    }
     showSummary();
   } else {
     currentIndex++;
     renderQuestion();
+    setEncouragement();
     saveProgress();
   }
 };
@@ -755,10 +851,10 @@ function showSummary(){
   document.getElementById("finalScore").textContent = `${correct}/${quizQuestions.length}`;
 
   let msg = "";
-  if(pct >= 90) msg = "Excellent! You've got this module down.";
-  else if(pct >= 70) msg = "Solid grasp — review the misses below.";
-  else if(pct >= 50) msg = "Decent start — a bit more review will help.";
-  else msg = "Worth another pass through the material.";
+  if(pct >= 90) msg = "top of the class — this module is locked in.";
+  else if(pct >= 70) msg = "solid! just polish up the misses below.";
+  else if(pct >= 50) msg = "decent start — give it one more pass.";
+  else msg = "worth a full re-read before the exam.";
   document.getElementById("finalMsg").textContent = `${pct}% on first attempt — ${msg}`;
 
   const topicStats = {};
@@ -795,7 +891,20 @@ function showSummary(){
     missed.forEach(m=>{
       const item = document.createElement("div");
       item.className = "missed-item";
-      item.innerHTML = `<div class="q">${m.q}</div><div class="y">Your first pick: ${m.yours}</div><div class="a">Correct: ${m.correct}</div>`;
+
+      const qDiv = document.createElement("div");
+      qDiv.className = "q";
+      qDiv.textContent = m.q;
+
+      const yDiv = document.createElement("div");
+      yDiv.className = "y";
+      yDiv.textContent = `Your first pick: ${m.yours}`;
+
+      const aDiv = document.createElement("div");
+      aDiv.className = "a";
+      aDiv.textContent = `Correct: ${m.correct}`;
+
+      item.append(qDiv, yDiv, aDiv);
       missedDiv.appendChild(item);
     });
   }
