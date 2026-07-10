@@ -1,0 +1,848 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<title>Biology for Engineers — Quiz</title>
+<style>
+  :root{
+    --bg:#0f172a;
+    --card:#ffffff;
+    --accent:#2563eb;
+    --accent-dark:#1d4ed8;
+    --good:#16a34a;
+    --bad:#dc2626;
+    --text:#1e293b;
+    --muted:#64748b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:linear-gradient(135deg,#0f172a,#1e3a5f);
+    min-height:100vh;
+    min-height:100dvh;
+    padding:24px 12px;
+    padding-top:max(24px, env(safe-area-inset-top));
+    padding-bottom:max(24px, env(safe-area-inset-bottom));
+    padding-left:max(12px, env(safe-area-inset-left));
+    padding-right:max(12px, env(safe-area-inset-right));
+    display:flex;
+    justify-content:center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app{ width:100%; max-width:700px; }
+  .header{ text-align:center; color:#fff; margin-bottom:16px; }
+  .header h1{ font-size:1.4rem; margin:0 0 4px; }
+  .header p{ margin:0; color:#cbd5e1; font-size:0.9rem; }
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:14px; color:#e2e8f0; font-size:0.85rem; flex-wrap:wrap; gap:8px;
+  }
+  select{
+    background:#1e293b; color:#fff; border:1px solid #334155;
+    border-radius:6px; padding:6px 10px; font-size:0.85rem;
+  }
+  select:disabled{ opacity:0.5; }
+  .dots{
+    display:flex; gap:5px; overflow-x:auto; padding:4px 2px 12px;
+    scrollbar-width:thin;
+  }
+  .dot{
+    flex:0 0 auto;
+    width:22px; height:22px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.65rem; font-weight:700; cursor:pointer;
+    background:#1e293b; color:#94a3b8; border:2px solid transparent;
+    transition:all .15s ease;
+  }
+  .dot.current{ border-color:#fff; }
+  .dot.correct{ background:var(--good); color:#fff; }
+  .dot.wrong{ background:var(--bad); color:#fff; }
+  .dot:hover{ transform:scale(1.15); }
+  .progress-wrap{ background:#1e293b; border-radius:8px; height:8px; overflow:hidden; margin-bottom:10px; }
+  .progress-bar{ height:100%; background:var(--accent); width:0%; transition:width .3s ease; }
+  .card{ background:var(--card); border-radius:14px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,0.3); }
+  .tag{
+    display:inline-block; background:#eff6ff; color:var(--accent-dark);
+    font-size:0.72rem; font-weight:600; padding:3px 10px; border-radius:999px;
+    margin-bottom:12px; letter-spacing:.03em;
+  }
+  .qtext{ font-size:1.1rem; font-weight:600; color:var(--text); margin-bottom:18px; line-height:1.4; }
+  .options{ display:flex; flex-direction:column; gap:10px; }
+  .option{
+    text-align:left; padding:12px 14px; border:2px solid #e2e8f0; border-radius:10px;
+    background:#f8fafc; cursor:pointer; font-size:0.95rem; color:var(--text);
+    transition:all .15s ease;
+  }
+  .option:hover:not(:disabled){ border-color:var(--accent); background:#eff6ff; }
+  .option.correct{ border-color:var(--good); background:#f0fdf4; color:#15803d; font-weight:600; }
+  .option.wrong{ border-color:var(--bad); background:#fef2f2; color:#b91c1c; font-weight:600; }
+  .option:disabled{ cursor:default; opacity:0.85; }
+  .feedback{ margin-top:14px; font-size:0.9rem; color:var(--muted); min-height:20px; }
+  .footer{ display:flex; justify-content:space-between; align-items:center; margin-top:20px; gap:10px; }
+  .navbtns{ display:flex; gap:8px; }
+  button.navbtn{
+    background:#1e293b; color:#fff; border:none; padding:10px 18px;
+    border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer;
+  }
+  button.navbtn:hover:not(:disabled){ background:#334155; }
+  button.navbtn:disabled{ opacity:0.35; cursor:not-allowed; }
+  button.navbtn.next{ background:var(--accent); }
+  button.navbtn.next:hover:not(:disabled){ background:var(--accent-dark); }
+  .score{ font-size:0.85rem; color:var(--muted); font-weight:600; }
+  .summary{ text-align:center; }
+  .summary h2{ font-size:1.6rem; color:var(--text); margin-bottom:6px; }
+  .summary .big-score{ font-size:3rem; font-weight:800; color:var(--accent); margin:10px 0; }
+  .breakdown{ text-align:left; margin:20px 0; border-top:1px solid #e2e8f0; padding-top:16px; }
+  .breakdown-row{ display:flex; justify-content:space-between; padding:8px 0; font-size:0.9rem; border-bottom:1px solid #f1f5f9; }
+  .breakdown-row span:last-child{ font-weight:700; }
+  .missed-list{ text-align:left; margin-top:16px; max-height:260px; overflow-y:auto; border-top:1px solid #e2e8f0; padding-top:14px; }
+  .missed-item{ font-size:0.85rem; padding:10px 0; border-bottom:1px solid #f1f5f9; }
+  .missed-item .q{ font-weight:600; color:var(--text); margin-bottom:4px; }
+  .missed-item .a{ color:var(--good); }
+  .missed-item .y{ color:var(--bad); }
+  .restart{
+    margin-top:20px; background:#1e293b; color:#fff; border:none;
+    padding:12px 26px; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer;
+  }
+  .restart:hover{ background:#0f172a; }
+  .hint{ font-size:0.78rem; color:#94a3b8; text-align:center; margin-top:10px; }
+
+  @media (max-width:420px){
+    .card{ padding:18px 16px; }
+    .header h1{ font-size:1.2rem; }
+    .qtext{ font-size:1.02rem; }
+    .footer{ flex-direction:column; align-items:stretch; }
+    .navbtns{ justify-content:space-between; }
+    button.navbtn{ flex:1; padding:12px 14px; }
+    .topbar{ flex-direction:column; align-items:stretch; }
+    select{ width:100%; }
+    .option{ padding:14px 14px; }
+  }
+  @media (hover:none){
+    .option, button.navbtn, .dot{ min-height:44px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1 id="moduleTitle">Biology for Engineers</h1>
+    <p id="moduleSub">Module Quiz</p>
+  </div>
+
+  <div id="quizView">
+    <div class="topbar">
+      <select id="moduleSelect"></select>
+      <select id="topicFilter"></select>
+    </div>
+    <div class="dots" id="dotNav"></div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+    <div class="card">
+      <span class="tag" id="qTopic">Topic</span>
+      <div class="qtext" id="qText">Loading...</div>
+      <div class="options" id="qOptions"></div>
+      <div class="feedback" id="qFeedback"></div>
+      <div class="footer">
+        <div class="score" id="liveScore">Score: 0 / 0</div>
+        <div class="navbtns">
+          <button class="navbtn" id="prevBtn">← Prev</button>
+          <button class="navbtn next" id="nextBtn">Next →</button>
+        </div>
+      </div>
+    </div>
+    <div class="hint">Pick an answer — if it's wrong, try again until you find the right one. Your score reflects your <em>first</em> attempt only. Options are shuffled each run, and your progress saves automatically. On a laptop: press 1–4 to answer, ← → to navigate.</div>
+    <div class="hint" style="margin-top:6px;"><a href="#" id="resetLink" style="color:#94a3b8;text-decoration:underline;">Reset saved progress</a></div>
+  </div>
+
+  <div id="summaryView" style="display:none;">
+    <div class="card summary">
+      <h2>Quiz Complete!</h2>
+      <div class="big-score" id="finalScore">0/0</div>
+      <div id="finalMsg" style="color:var(--muted);font-size:0.95rem;"></div>
+      <div class="breakdown" id="breakdown"></div>
+      <div class="missed-list" id="missedList"></div>
+      <button class="restart" id="restartBtn">Try Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- MODULE DATA ----
+// Add more modules to this array as question banks are uploaded.
+const modules = [
+  {
+    name: "Module 1: Cell Biology & Biomolecules",
+    questions: [
+      {q:"The basic unit of life is", opts:["Atom","Tissue","Cell","Organ"], ans:2, topic:"Cell Biology"},
+      {q:"Which characteristic is common to all living organisms?", opts:["Photosynthesis","Respiration","Movement","Multicellularity"], ans:1, topic:"Cell Biology"},
+      {q:"Homeostasis refers to", opts:["Growth of cells","Maintaining internal balance","Cell division","Reproduction"], ans:1, topic:"Cell Biology"},
+      {q:"The ability to respond to stimuli is called", opts:["Adaptation","Irritability","Evolution","Respiration"], ans:1, topic:"Cell Biology"},
+      {q:"Metabolism includes", opts:["Only catabolism","Only anabolism","Both anabolism and catabolism","Photosynthesis only"], ans:2, topic:"Cell Biology"},
+      {q:"The origin of new cells is explained by", opts:["Germ theory","Cell theory","Evolution theory","Atomic theory"], ans:1, topic:"Cell Biology"},
+      {q:"Growth in living organisms occurs due to", opts:["Increase in cell size only","Increase in cell number only","Both A and B","None"], ans:2, topic:"Cell Biology"},
+      {q:"Which is not a characteristic of life?", opts:["Reproduction","Crystallization","Metabolism","Organization"], ans:1, topic:"Cell Biology"},
+      {q:"Adaptation helps organisms to", opts:["Decrease survival","Increase survival","Stop evolution","Stop reproduction"], ans:1, topic:"Cell Biology"},
+      {q:"The smallest living entity is", opts:["Virus","Bacterium","Organelle","Molecule"], ans:1, topic:"Cell Biology"},
+      {q:"The control center of the cell is", opts:["Mitochondria","Ribosome","Nucleus","Golgi body"], ans:2, topic:"Cell Biology"},
+      {q:"The powerhouse of the cell is", opts:["Lysosome","Mitochondria","Nucleus","ER"], ans:1, topic:"Cell Biology"},
+      {q:"Ribosomes are responsible for", opts:["Lipid synthesis","ATP production","Protein synthesis","Digestion"], ans:2, topic:"Cell Biology"},
+      {q:"The plasma membrane is", opts:["Permeable","Impermeable","Selectively permeable","Non-living"], ans:2, topic:"Cell Biology"},
+      {q:"Plant cells have", opts:["Centrioles","Cell wall","Lysosomes only","No nucleus"], ans:1, topic:"Cell Biology"},
+      {q:"Chloroplasts are found in", opts:["Animal cells","Plant cells","Bacteria","Fungi"], ans:1, topic:"Cell Biology"},
+      {q:"The site of photosynthesis is", opts:["Mitochondria","Nucleus","Chloroplast","Endoplasmic Reticulum"], ans:2, topic:"Cell Biology"},
+      {q:"Smooth ER is involved in", opts:["Protein synthesis","Lipid synthesis","DNA replication","Respiration"], ans:1, topic:"Cell Biology"},
+      {q:"Golgi apparatus functions in", opts:["Packaging proteins","Respiration","Photosynthesis","Digestion"], ans:0, topic:"Cell Biology"},
+      {q:"Lysosomes contain", opts:["Hormones","Enzymes","DNA","RNA"], ans:1, topic:"Cell Biology"},
+      {q:"The genetic material in prokaryotes is located in", opts:["Nucleus","Nucleolus","Nucleoid","Cytoplasm only"], ans:2, topic:"Cell Biology"},
+      {q:"Cell wall is made of cellulose in", opts:["Bacteria","Animals","Plants","Fungi"], ans:2, topic:"Cell Biology"},
+      {q:"Cytoplasm is", opts:["Outside cell","Fluid inside cell","Only nucleus","Cell membrane"], ans:1, topic:"Cell Biology"},
+      {q:"Vacuoles in plant cells are", opts:["Small","Absent","Large and central","Only in animals"], ans:2, topic:"Cell Biology"},
+      {q:"Prokaryotic cells lack", opts:["Ribosomes","Cytoplasm","Membrane-bound organelles","Cell membrane"], ans:2, topic:"Cell Biology"},
+      {q:"The basic unit of carbohydrates is", opts:["Amino acid","Fatty acid","Monosaccharide","Nucleotide"], ans:2, topic:"Carbohydrates"},
+      {q:"Glucose is a", opts:["Disaccharide","Monosaccharide","Polysaccharide","Lipid"], ans:1, topic:"Carbohydrates"},
+      {q:"Sucrose is composed of", opts:["Glucose + Glucose","Glucose + Fructose","Glucose + Galactose","Fructose + Galactose"], ans:1, topic:"Carbohydrates"},
+      {q:"Starch is a", opts:["Monosaccharide","Lipid","Polysaccharide","Protein"], ans:2, topic:"Carbohydrates"},
+      {q:"Glycogen is stored in", opts:["Plants","Animals","Fungi only","Bacteria only"], ans:1, topic:"Carbohydrates"},
+      {q:"Cellulose provides", opts:["Energy storage","Structural support","Hormonal activity","Enzyme activity"], ans:1, topic:"Carbohydrates"},
+      {q:"Lactose is found in", opts:["Fruits","Milk","Plants","Meat"], ans:1, topic:"Carbohydrates"},
+      {q:"Carbohydrates mainly provide", opts:["Structure","Energy","Enzymes","Hormones"], ans:1, topic:"Carbohydrates"},
+      {q:"Polysaccharides are formed by", opts:["Peptide bonds","Glycosidic bonds","Hydrogen bonds","Ester bonds"], ans:1, topic:"Carbohydrates"},
+      {q:"Fructose is also known as", opts:["Milk sugar","Fruit sugar","Blood sugar","Malt sugar"], ans:1, topic:"Carbohydrates"},
+      {q:"Proteins are made up of", opts:["Fatty acids","Nucleotides","Amino acids","Monosaccharides"], ans:2, topic:"Proteins & Enzymes"},
+      {q:"Amino acids are linked by", opts:["Ester bond","Peptide bond","Glycosidic bond","Hydrogen bond"], ans:1, topic:"Proteins & Enzymes"},
+      {q:"The primary structure of protein refers to", opts:["3D shape","Amino acid sequence","Folding pattern","Subunits"], ans:1, topic:"Proteins & Enzymes"},
+      {q:"Enzymes are", opts:["Lipids","Carbohydrates","Proteins","Vitamins"], ans:2, topic:"Proteins & Enzymes"},
+      {q:"Enzymes function as", opts:["Reactants","Catalysts","Inhibitors","Hormones"], ans:1, topic:"Proteins & Enzymes"},
+      {q:"The active site is", opts:["Substrate","Binding site of enzyme","Protein tail","DNA"], ans:1, topic:"Proteins & Enzymes"},
+      {q:"Enzymes are specific due to", opts:["Shape","Size","Color","Location"], ans:0, topic:"Proteins & Enzymes"},
+      {q:"Denaturation affects", opts:["Primary structure only","Secondary and tertiary structure","DNA","Carbohydrates"], ans:1, topic:"Proteins & Enzymes"},
+      {q:"Optimal temperature for human enzymes is", opts:["25°C","0°C","37°C","50°C"], ans:2, topic:"Proteins & Enzymes"},
+      {q:"Competitive inhibitors bind to", opts:["Allosteric site","Active site","DNA","Ribosome"], ans:1, topic:"Proteins & Enzymes"},
+      {q:"Haemoglobin is a", opts:["Enzyme","Hormone","Structural protein","Transport protein"], ans:3, topic:"Proteins & Enzymes"},
+      {q:"Collagen is a", opts:["Enzyme","Storage protein","Structural protein","Hormone"], ans:2, topic:"Proteins & Enzymes"},
+      {q:"Enzymes lower", opts:["Activation energy","Temperature","pH","Substrate"], ans:0, topic:"Proteins & Enzymes"},
+      {q:"Allosteric enzymes have", opts:["One subunit","Multiple subunits","No active site","No specificity"], ans:1, topic:"Proteins & Enzymes"},
+      {q:"The lock and key model was proposed by", opts:["Watson","Crick","Fischer","Darwin"], ans:2, topic:"Proteins & Enzymes"},
+      {q:"DNA stands for", opts:["Deoxyribose nucleic acid","Deoxyribonucleic acid","Dinucleic acid","Double nucleic acid"], ans:1, topic:"Nucleic Acids & Lipids"},
+      {q:"RNA contains", opts:["Thymine","Uracil","Cytosine only","No sugar"], ans:1, topic:"Nucleic Acids & Lipids"},
+      {q:"The basic unit of nucleic acids is", opts:["Amino acid","Nucleotide","Fatty acid","Monosaccharide"], ans:1, topic:"Nucleic Acids & Lipids"},
+      {q:"DNA is located in", opts:["Cytoplasm only","Nucleus","Ribosome","Lysosome"], ans:1, topic:"Nucleic Acids & Lipids"},
+      {q:"Lipids are", opts:["Hydrophilic","Hydrophobic","Water-soluble","Polymers"], ans:1, topic:"Nucleic Acids & Lipids"},
+      {q:"Phospholipids form", opts:["DNA","Protein","Cell membrane","Ribosome"], ans:2, topic:"Nucleic Acids & Lipids"},
+      {q:"Fatty acids are components of", opts:["Proteins","Carbohydrates","Lipids","Nucleic acids"], ans:2, topic:"Nucleic Acids & Lipids"},
+      {q:"Steroids are", opts:["Proteins","Lipids","Carbohydrates","Enzymes"], ans:1, topic:"Nucleic Acids & Lipids"},
+      {q:"Saturated fats have", opts:["Double bonds","No double bonds","Triple bonds","Peptide bonds"], ans:1, topic:"Nucleic Acids & Lipids"},
+      {q:"The genetic information is stored in", opts:["Protein","Lipid","DNA","Carbohydrate"], ans:2, topic:"Nucleic Acids & Lipids"}
+    ]
+  },
+  {
+    name: "Module 2: Biomolecules, Nucleic Acids & Bioinspired Design",
+    questions: [
+      {q:"A biomolecule is", opts:["Synthetic chemical","Substance produced by living organisms","Metal compound","Inorganic salt"], ans:1, topic:"Biomolecules Basics"},
+      {q:"The four major types of biomolecules are", opts:["DNA, RNA, Water, Minerals","Lipids, Proteins, Carbohydrates, Nucleic acids","Vitamins, Hormones, Enzymes, Water","Fats, Oils, Sugars, Salts"], ans:1, topic:"Biomolecules Basics"},
+      {q:"Lipids are mainly responsible for", opts:["Genetic storage","Oxygen transport","Energy storage and membrane formation","Protein synthesis"], ans:2, topic:"Lipids & Biodiesel"},
+      {q:"Nucleic acids primarily function in", opts:["Energy storage","Structural support","Information storage and transfer","Digestion"], ans:2, topic:"Nucleic Acids"},
+      {q:"Proteins are made up of", opts:["Fatty acids","Nucleotides","Amino acids","Glucose"], ans:2, topic:"Proteins"},
+      {q:"Carbohydrates are", opts:["Inorganic salts","Essential nutrients","Metals","Hormones"], ans:1, topic:"Carbohydrates & Biopolymers"},
+      {q:"Cellulose is found in", opts:["Animal cells","Plant cell walls","Blood plasma","Nucleus"], ans:1, topic:"Carbohydrates & Biopolymers"},
+      {q:"Cellulose-based water filters are", opts:["Non-biodegradable","Biodegradable","Metal filters","Plastic filters only"], ans:1, topic:"Carbohydrates & Biopolymers"},
+      {q:"One property of cellulose filters is", opts:["Low porosity","High porosity","High toxicity","Non-renewable"], ans:1, topic:"Carbohydrates & Biopolymers"},
+      {q:"One limitation of cellulose filters is", opts:["High temperature resistance","Difficult sterilization","High toxicity","Expensive raw material"], ans:1, topic:"Carbohydrates & Biopolymers"},
+      {q:"PHA is produced by", opts:["Animals","Microorganisms","Viruses","Metals"], ans:1, topic:"Carbohydrates & Biopolymers"},
+      {q:"PHA is", opts:["Toxic plastic","Biodegradable polymer","Petroleum product","Non-renewable material"], ans:1, topic:"Carbohydrates & Biopolymers"},
+      {q:"PLA is derived from", opts:["Petroleum","Coal","Corn starch","Iron"], ans:2, topic:"Carbohydrates & Biopolymers"},
+      {q:"PLA is commonly used in", opts:["3D printing","Cement","Steel","Glass"], ans:0, topic:"Carbohydrates & Biopolymers"},
+      {q:"DNA stands for", opts:["Dynamic Nuclear Acid","Deoxyribonucleic Acid","Double Nitrogen Acid","None"], ans:1, topic:"Nucleic Acids"},
+      {q:"RNA contains which sugar?", opts:["Deoxyribose","Ribose","Glucose","Lactose"], ans:1, topic:"Nucleic Acids"},
+      {q:"DNA structure is", opts:["Single stranded","Double helix","Triple helix","Circular protein"], ans:1, topic:"Nucleic Acids"},
+      {q:"Types of RNA include", opts:["mRNA","tRNA","rRNA","All of the above"], ans:3, topic:"Nucleic Acids"},
+      {q:"DNA vaccine introduces", opts:["Protein","Viral DNA","Antibody","Lipid"], ans:1, topic:"Nucleic Acids"},
+      {q:"RNA vaccines produce", opts:["Whole virus","Spike protein","DNA","Enzyme"], ans:1, topic:"Nucleic Acids"},
+      {q:"DNA fingerprinting is used in", opts:["Forensics","Cooking","Mining","Painting"], ans:0, topic:"Nucleic Acids"},
+      {q:"PCR stands for", opts:["Polymerase Chain Reaction","Protein Cell Reaction","Polymer Control Reaction","None"], ans:0, topic:"Nucleic Acids"},
+      {q:"Proteins are made of", opts:["Sugars","Amino acids","Lipids","Nucleotides"], ans:1, topic:"Proteins"},
+      {q:"Collagen provides", opts:["Energy","Structural support","Oxygen","DNA"], ans:1, topic:"Proteins"},
+      {q:"Hemoglobin transports", opts:["Oxygen","DNA","Glucose","Hormones"], ans:0, topic:"Proteins"},
+      {q:"Whey protein is obtained from", opts:["Cheese-making process","Plants","Meat","Eggs"], ans:0, topic:"Proteins"},
+      {q:"Pea protein is derived from", opts:["Milk","Yellow split peas","Wheat","Corn"], ans:1, topic:"Proteins"},
+      {q:"Meat protein is", opts:["Incomplete","Complete protein","Lipid","Carbohydrate"], ans:1, topic:"Proteins"},
+      {q:"Lipids are", opts:["Water soluble","Insoluble in water","Proteins","Sugars"], ans:1, topic:"Lipids & Biodiesel"},
+      {q:"Triglycerides contain", opts:["1 fatty acid","2 fatty acids","3 fatty acids","4 fatty acids"], ans:2, topic:"Lipids & Biodiesel"},
+      {q:"Biodiesel is produced by", opts:["Fermentation","Transesterification","Oxidation","Filtration"], ans:1, topic:"Lipids & Biodiesel"},
+      {q:"Glycerol is a", opts:["Catalyst","By-product","Fuel","Enzyme"], ans:1, topic:"Lipids & Biodiesel"},
+      {q:"Enzymes are", opts:["Catalysts","Inhibitors","Fuels","Antibodies"], ans:0, topic:"Enzymes"},
+      {q:"Glucose oxidase is used in", opts:["Biosensors","Plastics","Cement","Filters"], ans:0, topic:"Enzymes"},
+      {q:"Lignolytic enzymes degrade", opts:["Cellulose","Lignin","Protein","DNA"], ans:1, topic:"Enzymes"},
+      {q:"Laccases are", opts:["Copper enzymes","Iron enzymes","Zinc enzymes","Sodium enzymes"], ans:0, topic:"Enzymes"},
+      {q:"Manganese peroxidase requires", opts:["Sodium","Potassium","Manganese ions","Iron"], ans:2, topic:"Enzymes"},
+      {q:"Echolocation inspired", opts:["Sonar","GPS","Camera","Pump"], ans:0, topic:"Bioinspired Design & Applications"},
+      {q:"Lotus leaf effect inspired", opts:["Solar panels","Self-cleaning surfaces","Engines","Vaccines"], ans:1, topic:"Bioinspired Design & Applications"},
+      {q:"Bioprinting is used to print", opts:["Metals","Ear and bone tissues","Stones","Cement"], ans:1, topic:"Bioinspired Design & Applications"},
+      {q:"DNA fingerprinting separates DNA by", opts:["Distillation","Gel electrophoresis","Sedimentation","Filtration"], ans:1, topic:"Nucleic Acids"},
+      {q:"Phospholipids have", opts:["3 fatty acids","2 fatty acids","1 fatty acid","No fatty acids"], ans:1, topic:"Lipids & Biodiesel"},
+      {q:"Biodiesel feedstock includes", opts:["Vegetable oil","Animal fats","Recycled cooking oil","All of the above"], ans:3, topic:"Lipids & Biodiesel"},
+      {q:"PLA polymerization requires", opts:["Heat and catalysts","Cold storage","Distillation","UV radiation"], ans:0, topic:"Carbohydrates & Biopolymers"},
+      {q:"DNA bases include", opts:["A, T, C, G","A, U, C, G","A, B, C, D","X, Y, Z"], ans:0, topic:"Nucleic Acids"},
+      {q:"RNA uses base", opts:["Thymine","Uracil","Cytosine","Guanine"], ans:1, topic:"Nucleic Acids"},
+      {q:"Proteins regulate via hormones like", opts:["Insulin","Glucose","DNA","Lipids"], ans:0, topic:"Proteins"},
+      {q:"Lipids are used as", opts:["Cleaning agents","Metals","DNA","RNA"], ans:0, topic:"Lipids & Biodiesel"},
+      {q:"PHA is used in", opts:["Medical sutures","Packaging","Agriculture films","All of the above"], ans:3, topic:"Carbohydrates & Biopolymers"},
+      {q:"PLA is biodegradable under", opts:["Industrial composting","Vacuum","Metal furnace","Water instantly"], ans:0, topic:"Carbohydrates & Biopolymers"}
+    ]
+  },
+  {
+    name: "Module 3: Neural, Sensory & Organ Systems Engineering",
+    questions: [
+      {q:"The basic functional unit of the brain is", opts:["Axon","Nephron","Neuron","Alveoli"], ans:2, topic:"Nervous System"},
+      {q:"Information in the brain is stored in the form of", opts:["Binary code","Electrochemical impulses","Magnetic waves","Optical signals"], ans:1, topic:"Nervous System"},
+      {q:"The brain processes information in a", opts:["Sequential manner","Distributed parallel manner","Single loop system","Mechanical pathway"], ans:1, topic:"Nervous System"},
+      {q:"The prefrontal cortex is responsible for", opts:["Digestion","Vision","Decision making","Hearing"], ans:2, topic:"Nervous System"},
+      {q:"The central nervous system includes", opts:["Brain and nerves","Brain and spinal cord","Spinal cord and muscles","Brain and heart"], ans:1, topic:"Nervous System"},
+      {q:"The peripheral nervous system connects", opts:["Brain to heart","Brain to lungs","CNS to organs and limbs","Kidney to bladder"], ans:2, topic:"Nervous System"},
+      {q:"Motor neurons are also called", opts:["Afferent neurons","Efferent neurons","Relay neurons","Sensory neurons"], ans:1, topic:"Nervous System"},
+      {q:"Sensory neurons are also called", opts:["Efferent","Motor","Afferent","Interneurons"], ans:2, topic:"Nervous System"},
+      {q:"Fight-or-flight response is controlled by", opts:["Parasympathetic system","Somatic system","Sympathetic system","CNS"], ans:2, topic:"Nervous System"},
+      {q:"Rest and digest response is controlled by", opts:["Sympathetic","Parasympathetic","Somatic","Spinal cord"], ans:1, topic:"Nervous System"},
+      {q:"Correct sequence of impulse transmission", opts:["Axon → Dendrite → Cell body","Dendrite → Cell body → Axon → Axon terminal","Cell body → Dendrite → Axon","Axon → Cell body → Dendrite"], ans:1, topic:"Nervous System"},
+      {q:"Neurotransmitters are released from", opts:["Dendrites","Axon terminals","Nucleus","Myelin sheath"], ans:1, topic:"Nervous System"},
+      {q:"EEG stands for", opts:["Electrical Energy Graph","Electro Encephalo Gram","Electro Endocrine Graph","Electronic Enzyme Graph"], ans:1, topic:"Neurological Disorders & Bioelectronics"},
+      {q:"EEG is mainly used to diagnose", opts:["Diabetes","Epilepsy","Kidney failure","Asthma"], ans:1, topic:"Neurological Disorders & Bioelectronics"},
+      {q:"EEG records", opts:["Blood pressure","Muscle contraction","Brain electrical activity","Oxygen level"], ans:2, topic:"Neurological Disorders & Bioelectronics"},
+      {q:"Parkinson's disease is caused due to loss of", opts:["Serotonin","Dopamine","Insulin","Oxygen"], ans:1, topic:"Neurological Disorders & Bioelectronics"},
+      {q:"Deep Brain Stimulation involves", opts:["Chemical injection","Electrical impulses to brain","Radiation","MRI scanning"], ans:1, topic:"Neurological Disorders & Bioelectronics"},
+      {q:"First symptom of Parkinson's is usually", opts:["Fever","Tremor","Paralysis","Blindness"], ans:1, topic:"Neurological Disorders & Bioelectronics"},
+      {q:"Robotic prosthetic limbs integrate", opts:["Mechatronics and sensors","Only plastic","Only metal","Batteries only"], ans:0, topic:"Neurological Disorders & Bioelectronics"},
+      {q:"A prosthesis helps amputees to", opts:["See","Hear","Perform daily activities","Digest food"], ans:2, topic:"Neurological Disorders & Bioelectronics"},
+      {q:"The pupil acts like a", opts:["Sensor","Aperture","Battery","Film"], ans:1, topic:"Vision & the Eye"},
+      {q:"Image in eye is formed on", opts:["Iris","Cornea","Retina","Lens"], ans:2, topic:"Vision & the Eye"},
+      {q:"Rods are responsible for", opts:["Color vision","Night vision","Hearing","Smell"], ans:1, topic:"Vision & the Eye"},
+      {q:"Cones are responsible for", opts:["Night vision","Color vision","Balance","Reflex"], ans:1, topic:"Vision & the Eye"},
+      {q:"The functional center of retina is", opts:["Cornea","Fovea","Lens","Pupil"], ans:1, topic:"Vision & the Eye"},
+      {q:"Cataract is", opts:["Retinal tear","Clouding of lens","Optic nerve damage","Muscle weakness"], ans:1, topic:"Vision & the Eye"},
+      {q:"Nuclear sclerosis affects", opts:["Retina","Lens nucleus","Cornea","Iris"], ans:1, topic:"Vision & the Eye"},
+      {q:"CR-39 lenses are", opts:["Glass","Plastic","Metal","Silicon"], ans:1, topic:"Vision & the Eye"},
+      {q:"Polycarbonate lenses are known for", opts:["High weight","Fragility","Impact resistance","Poor clarity"], ans:2, topic:"Vision & the Eye"},
+      {q:"Bionic eye consists of", opts:["Camera and microchip","Only lens","Only wire","Only battery"], ans:0, topic:"Vision & the Eye"},
+      {q:"The heart is called a double pump because", opts:["It beats twice","It has two sides","It pumps to lungs and body","It has two valves"], ans:2, topic:"Cardiovascular System"},
+      {q:"Right side of heart pumps blood to", opts:["Brain","Lungs","Kidneys","Liver"], ans:1, topic:"Cardiovascular System"},
+      {q:"ECG records", opts:["Lung capacity","Brain waves","Heart electrical activity","Kidney pressure"], ans:2, topic:"Cardiovascular System"},
+      {q:"Arrhythmia means", opts:["High BP","Irregular heartbeat","Kidney stone","Low sugar"], ans:1, topic:"Cardiovascular System"},
+      {q:"Coronary artery disease is mainly due to", opts:["Infection","Cholesterol plaque","Virus","Trauma"], ans:1, topic:"Cardiovascular System"},
+      {q:"A stent is used to", opts:["Block artery","Open artery","Replace heart","Stop blood"], ans:1, topic:"Cardiovascular System"},
+      {q:"Balloon expandable stents are", opts:["Permanent deformation prone","Flexible","Soft","Absorbable"], ans:0, topic:"Cardiovascular System"},
+      {q:"Pacemaker controls", opts:["Fast breathing","Slow heartbeat","High sugar","Brain waves"], ans:1, topic:"Cardiovascular System"},
+      {q:"Defibrillator is used during", opts:["Diabetes","Cardiac arrest","Asthma","Fever"], ans:1, topic:"Cardiovascular System"},
+      {q:"AED stands for", opts:["Automatic Energy Device","Automated External Defibrillator","Artificial Electrical Device","Active Electro Device"], ans:1, topic:"Cardiovascular System"},
+      {q:"Gas exchange occurs in", opts:["Bronchi","Trachea","Alveoli","Larynx"], ans:2, topic:"Respiratory System"},
+      {q:"Oxygen diffuses due to", opts:["Active transport","Pressure gradient","Diffusion gradient","Osmosis"], ans:2, topic:"Respiratory System"},
+      {q:"Spirometry measures", opts:["Heart rate","Blood sugar","Lung function","Kidney function"], ans:2, topic:"Respiratory System"},
+      {q:"COPD stands for", opts:["Chronic Obstructive Pulmonary Disease","Central Organ Pulmonary Disorder","Cardiac Obstruction Disease","Chronic Oxygen Pressure Disease"], ans:0, topic:"Respiratory System"},
+      {q:"Emphysema affects", opts:["Alveoli","Kidney","Heart","Brain"], ans:0, topic:"Respiratory System"},
+      {q:"Ventilators help in", opts:["Pumping blood","Supporting breathing","Brain stimulation","Dialysis"], ans:1, topic:"Respiratory System"},
+      {q:"Heart-lung machine is used in", opts:["Brain surgery","Open heart surgery","Eye surgery","Dialysis"], ans:1, topic:"Cardiovascular System"},
+      {q:"Functional unit of kidney", opts:["Alveoli","Nephron","Neuron","Sarcomere"], ans:1, topic:"Renal System & Dialysis"},
+      {q:"Filtration occurs in", opts:["Loop of Henle","Bowman's capsule","Distal tubule","Ureter"], ans:1, topic:"Renal System & Dialysis"},
+      {q:"Glomerulus is a network of", opts:["Nerves","Capillaries","Muscles","Fibers"], ans:1, topic:"Renal System & Dialysis"},
+      {q:"CKD stands for", opts:["Chronic Kidney Disease","Central Kidney Damage","Chronic Kinetic Disorder","Cardiac Kidney Disease"], ans:0, topic:"Renal System & Dialysis"},
+      {q:"Dialysis removes", opts:["Oxygen","Waste from blood","Hormones","Vitamins"], ans:1, topic:"Renal System & Dialysis"},
+      {q:"Hemodialysis uses", opts:["Abdomen lining","External machine","Heart","Brain"], ans:1, topic:"Renal System & Dialysis"},
+      {q:"Peritoneal dialysis uses", opts:["Artificial membrane","Peritoneum","Lungs","Liver"], ans:1, topic:"Renal System & Dialysis"},
+      {q:"Urine flows from kidney to bladder through", opts:["Urethra","Ureter","Aorta","Vein"], ans:1, topic:"Renal System & Dialysis"},
+      {q:"Basic unit of muscle contraction", opts:["Nephron","Sarcomere","Neuron","Alveoli"], ans:1, topic:"Musculoskeletal System"},
+      {q:"Muscles help in", opts:["Blood filtration","Movement","Digestion","Vision"], ans:1, topic:"Musculoskeletal System"},
+      {q:"Increase in heart rate is caused by", opts:["Parasympathetic system","Sympathetic system","Somatic system","CNS"], ans:1, topic:"Cardiovascular System"},
+      {q:"Decrease in heart rate is caused by", opts:["Sympathetic system","Parasympathetic system","Motor neuron","Relay neuron"], ans:1, topic:"Cardiovascular System"},
+      {q:"A biventricular pacemaker is used for", opts:["Vision correction","Kidney failure","Heart failure","Asthma"], ans:2, topic:"Cardiovascular System"},
+      {q:"ICD stands for", opts:["Internal Cardiac Device","Implantable Cardioverter Defibrillator","Internal Current Device","Integrated Cardiac Dialyzer"], ans:1, topic:"Cardiovascular System"},
+      {q:"COPD mainly affects the", opts:["Brain","Liver","Lungs","Kidney"], ans:2, topic:"Respiratory System"},
+      {q:"The trachea is also called", opts:["Windpipe","Food pipe","Artery","Vein"], ans:0, topic:"Respiratory System"},
+      {q:"Artificial kidney is used in", opts:["Spirometry","Dialysis","ECG","EEG"], ans:1, topic:"Renal System & Dialysis"},
+      {q:"Balloon stents are expanded using", opts:["Heat","Pressure balloon","Laser","Ultrasound"], ans:1, topic:"Cardiovascular System"},
+      {q:"Cataract affects the", opts:["Retina","Lens","Iris","Optic nerve"], ans:1, topic:"Vision & the Eye"},
+      {q:"Night blindness is due to damage of", opts:["Cones","Rods","Iris","Lens"], ans:1, topic:"Vision & the Eye"},
+      {q:"Color vision is due to", opts:["Rods","Cones","Retina","Iris"], ans:1, topic:"Vision & the Eye"},
+      {q:"Lung capacity is measured using", opts:["ECG","EEG","Spirometer","Dialyzer"], ans:2, topic:"Respiratory System"},
+      {q:"Neurons communicate using", opts:["Hormones","Neurotransmitters","Oxygen","Enzymes"], ans:1, topic:"Nervous System"},
+      {q:"Rest and digest function slows", opts:["Digestion","Heart rate","Urine formation","Movement"], ans:1, topic:"Nervous System"},
+      {q:"The main function of alveoli is", opts:["Digestion","Filtration","Gas exchange","Conduction"], ans:2, topic:"Respiratory System"},
+      {q:"Electrical impulses in heart are monitored by", opts:["EEG","ECG","EMG","CT"], ans:1, topic:"Cardiovascular System"},
+      {q:"Artificial ventilation is required in", opts:["Hypertension","Respiratory failure","Kidney stone","Diabetes"], ans:1, topic:"Respiratory System"},
+      {q:"Bowman's capsule surrounds the", opts:["Nephron","Glomerulus","Axon","Ureter"], ans:1, topic:"Renal System & Dialysis"},
+      {q:"Urinary bladder stores", opts:["Blood","Urine","Oxygen","Hormones"], ans:1, topic:"Renal System & Dialysis"},
+      {q:"Prosthetic arms are controlled using", opts:["Neurons","Sensors","Muscles","Blood"], ans:1, topic:"Neurological Disorders & Bioelectronics"},
+      {q:"DBS is mainly used for", opts:["Asthma","Parkinson's disease","Diabetes","Kidney failure"], ans:1, topic:"Neurological Disorders & Bioelectronics"},
+      {q:"Parkinson's disease affects", opts:["Digestion","Movement","Vision","Hearing"], ans:1, topic:"Neurological Disorders & Bioelectronics"},
+      {q:"Diffusion depends on", opts:["Pressure gradient","Voltage","Current","Resistance"], ans:0, topic:"Respiratory System"},
+      {q:"Bronchi branch into", opts:["Nephrons","Bronchioles","Alveoli","Ureter"], ans:1, topic:"Respiratory System"},
+      {q:"Artificial vision can be restored using", opts:["ECG","Bionic eye","Spirometer","Dialysis"], ans:1, topic:"Vision & the Eye"},
+      {q:"Polycarbonate lens is", opts:["Brittle","Impact resistant","Heavy","Metallic"], ans:1, topic:"Vision & the Eye"},
+      {q:"Electrical stimulation in DBS is applied to", opts:["Lungs","Brain","Kidney","Heart"], ans:1, topic:"Neurological Disorders & Bioelectronics"},
+      {q:"Heart-lung machine replaces", opts:["Liver","Heart and lungs","Kidney","Brain"], ans:1, topic:"Cardiovascular System"},
+      {q:"Afferent neurons carry signals to", opts:["Muscles","Brain","Organs","Skin"], ans:1, topic:"Nervous System"},
+      {q:"Efferent neurons carry signals from", opts:["Brain","Skin","Eyes","Kidney"], ans:0, topic:"Nervous System"},
+      {q:"Cerebrospinal Fluid (CSF) protects the", opts:["Kidney","Brain","Liver","Heart"], ans:1, topic:"Nervous System"},
+      {q:"The sympathetic system prepares the body for", opts:["Sleep","Digestion","Flight-or-fight response","Relaxation"], ans:2, topic:"Nervous System"},
+      {q:"The autonomic nervous system controls", opts:["Voluntary movement","Internal organs involuntarily","Memory","Thinking"], ans:1, topic:"Nervous System"},
+      {q:"Pupil regulates", opts:["Blood flow","Light entry","Oxygen","Urine"], ans:1, topic:"Vision & the Eye"},
+      {q:"Lens focuses light on", opts:["Cornea","Retina","Iris","Pupil"], ans:1, topic:"Vision & the Eye"},
+      {q:"Motor neuron connects to", opts:["Receptors","Effectors","Retina","Kidney"], ans:1, topic:"Nervous System"},
+      {q:"Oxygen moves from alveoli to", opts:["Heart","Blood","Kidney","Brain"], ans:1, topic:"Respiratory System"},
+      {q:"Dialyzer acts as", opts:["Artificial lung","Artificial kidney","Artificial eye","Artificial heart"], ans:1, topic:"Renal System & Dialysis"},
+      {q:"Brain is protected by", opts:["Muscles","Meninges","Nephrons","Sarcomeres"], ans:1, topic:"Nervous System"},
+      {q:"Neurons transmit", opts:["Oxygen","Impulses","Blood","Hormones"], ans:1, topic:"Nervous System"},
+      {q:"Neurotransmitters are released from", opts:["Dendrites","Axon terminals","Nucleus","Cytoplasm"], ans:1, topic:"Nervous System"},
+      {q:"The somatic nervous system controls", opts:["Heartbeat","Gland secretion","Voluntary movement","Hormone release"], ans:2, topic:"Nervous System"},
+      {q:"The autonomic nervous system controls", opts:["Voluntary movement","Internal organs involuntarily","Memory","Thinking"], ans:1, topic:"Nervous System"}
+    ]
+  },
+  {
+    name: "Module 4: Bio-Inspired Engineering & Biomimicry",
+    questions: [
+      {q:"What is echolocation?", opts:["The location of objects by interpreting reflected sound","A visual method animals use to detect objects","A form of chemical communication between animals","Mechanical sonar used only by submarines"], ans:0, topic:"Echolocation & Bio-sonar"},
+      {q:"What is echolocation in animals also known as?", opts:["Radar sensing","Sound mapping","Bio sonar","Transmitter and receiver"], ans:2, topic:"Echolocation & Bio-sonar"},
+      {q:"Which of the following animals use echolocation?", opts:["Eagle","Bat","Mouse","Human"], ans:1, topic:"Echolocation & Bio-sonar"},
+      {q:"What is the purpose of the Doppler effect in echolocation?", opts:["It allows an animal to tell if an object is moving toward or away from them","It helps an animal determine which direction a sound is coming from","It tells an animal how big an object is","All of the answers are correct"], ans:3, topic:"Echolocation & Bio-sonar"},
+      {q:"The shape of a bird's body, which helps reduce air resistance, is called", opts:["Linear","Streamlined","Angular","Cylindrical"], ans:1, topic:"Bird & Aircraft Flight"},
+      {q:"Bird flight is a direct application of which physical law?", opts:["Newton's First Law","Newton's Third Law of Motion","Law of Conservation of Mass","Kepler's Law"], ans:1, topic:"Bird & Aircraft Flight"},
+      {q:"What is the primary purpose of a bird's tail during flight?", opts:["Generating thrust","Steering and braking","Keeping the body warm","Breathing"], ans:1, topic:"Bird & Aircraft Flight"},
+      {q:"Why do many birds fly in a V-formation?", opts:["To look bigger to predators","To reduce drag and save energy","To communicate with sound","To stay in the shade"], ans:1, topic:"Bird & Aircraft Flight"},
+      {q:"What are the four forces acting on an aircraft in flight?", opts:["Thrust, Drag, Gravity, Velocity","Lift, Weight, Thrust, Drag","Lift, Weight, Friction, Speed","Speed, Drag, Torque, Gravity"], ans:1, topic:"Bird & Aircraft Flight"},
+      {q:"Which part of an aircraft is inspired by the bird's tail for controlling pitch?", opts:["Rudder","Aileron","Horizontal Stabilizer (Empennage)","Winglet"], ans:2, topic:"Bird & Aircraft Flight"},
+      {q:"What is the phenomenon called when a bird or aircraft flies over a surface and experiences increased lift?", opts:["Wingtip vortex","Ground effect","Stall","Thrust reversal"], ans:1, topic:"Bird & Aircraft Flight"},
+      {q:"Birds and aircraft both have _______ shaped bodies to reduce drag.", opts:["Rectangular","Spherical","Streamlined/Boat-shaped","Triangular"], ans:2, topic:"Bird & Aircraft Flight"},
+      {q:"What provides the \"lift\" in both bird wings and airplane wings?", opts:["Low pressure above, high pressure below","High pressure above, low pressure below","Equal pressure on all sides","Just the flapping motion"], ans:0, topic:"Bird & Aircraft Flight"},
+      {q:"What is the primary function of photosynthesis?", opts:["Production of oxygen","Conversion of light energy into chemical energy (glucose)","Absorption of carbon dioxide","Breakdown of glucose"], ans:1, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"Which gas is released as a byproduct during the light-dependent reactions?", opts:["Carbon Dioxide","Oxygen","Nitrogen","Hydrogen"], ans:1, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"Where do the light-dependent reactions of photosynthesis occur?", opts:["Stroma","Grana (Thylakoid membranes)","Cytoplasm","Nucleus"], ans:1, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"What is the main pigment that absorbs sunlight for photosynthesis?", opts:["Xanthophyll","Carotene","Chlorophyll","Anthocyanin"], ans:2, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"The overall chemical equation for photosynthesis involves which inputs and outputs?", opts:["CO2 + Glucose → O2 + Water","Light + O2 + Water → CO2 + Glucose","Light + CO2 + Water → Glucose + O2","Glucose + O2 → CO2 + Water + Energy"], ans:2, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"What is the primary function of the \"Bionic Leaf\" developed by scientists?", opts:["To generate electricity from wind","To use solar energy to split water and create liquid fuels","To accelerate plant growth in low light","To clean ocean water"], ans:1, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"The bionic leaf is designed to mimic which natural process?", opts:["Cellular respiration","Nitrogen fixation","Photosynthesis","Transpiration"], ans:2, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"Which of the following components is used as a catalyst in the bionic leaf?", opts:["Gold","Iron","Cobalt","Platinum"], ans:2, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"How does the bionic leaf's efficiency compare to natural photosynthesis?", opts:["It is roughly 10 times more efficient","It is 50% less efficient","It is exactly the same efficiency","It is 2 times more efficient"], ans:0, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"What are the primary raw materials required for the bionic leaf to operate?", opts:["Sunlight and oil","Sunlight, water, and carbon dioxide","Water, oxygen, and nitrogen","Only sunlight"], ans:1, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"The bionic leaf uses a combination of a catalyst and what else to produce fuel?", opts:["Genetically engineered bacteria","Solar panels","Algae","Silica gel"], ans:0, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"Which of the following is an example of a liquid fuel produced by the bionic leaf?", opts:["Ethanol","Isopropanol","Methanol","Propane"], ans:1, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"The bionic leaf is considered \"carbon neutral\" or \"carbon negative\" because it", opts:["Does not produce exhaust","Uses carbon dioxide as a reactant to produce fuel","Operates only in low temperatures","Replaces the need for trees"], ans:1, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"The bionic leaf system splits water into which two elements?", opts:["Oxygen and Carbon","Hydrogen and Oxygen","Hydrogen and Carbon","Nitrogen and Oxygen"], ans:1, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"In the context of the bionic leaf, what does \"artificial leaf\" refer to?", opts:["A plastic plant","A device that uses sunlight to split water","A genetically modified organism","A leaf that produces oxygen only"], ans:1, topic:"Photosynthesis & Bionic Leaf"},
+      {q:"Which of the following is NOT one of the four main forces acting on an aircraft in flight?", opts:["Lift","Drag","Gravity","Friction"], ans:3, topic:"Bird & Aircraft Flight"},
+      {q:"Which component on a plane works similarly to a bird's tail for steering?", opts:["Wingtip","Rudder","Fuselage","Engine"], ans:1, topic:"Bird & Aircraft Flight"},
+      {q:"What allows birds to change direction while flying?", opts:["Beak","Claws","Tail","Eyes"], ans:2, topic:"Bird & Aircraft Flight"},
+      {q:"What is the main principle behind the \"Lotus Effect\" observed on lotus leaves?", opts:["High surface tension","Super hydrophobicity and self-cleaning","Absorption of water","Increased friction"], ans:1, topic:"Lotus Effect & Self-Cleaning Surfaces"},
+      {q:"Which combination of features enables the lotus leaf to repel water and stay clean?", opts:["Smooth surface and hydrophilic coating","Textured surface and waxy coating","Flat surface and soft texture","Porous surface and dry coating"], ans:1, topic:"Lotus Effect & Self-Cleaning Surfaces"},
+      {q:"In the context of bio-inspired engineering, the lotus leaf effect is used to develop", opts:["Highly absorbent materials","Self-cleaning, hydrophobic coatings","Lightweight fabrics","Solar panels"], ans:1, topic:"Lotus Effect & Self-Cleaning Surfaces"},
+      {q:"When water lands on a lotus leaf, it forms spherical droplets due to", opts:["High adhesion forces","Low surface tension of water","Hydrophobic wax tubules and water's own surface tension","Absorption by the leaf"], ans:2, topic:"Lotus Effect & Self-Cleaning Surfaces"},
+      {q:"Which of the following is considered a similar nature-bioinspired mechanism to the lotus leaf effect in the context of reducing drag?", opts:["Echolocation","Shark skin","Plant burrs","Photosynthesis"], ans:1, topic:"Lotus Effect & Self-Cleaning Surfaces"},
+      {q:"The Lotus Effect results in all of the following except", opts:["Water beads up","Dirt is carried away","Surfaces remain wet","Surfaces stay dry"], ans:2, topic:"Lotus Effect & Self-Cleaning Surfaces"},
+      {q:"The lotus leaf effect is characterized by high water repellency, often measured by a very high", opts:["Angle of incidence","Contact angle","Surface energy","Adhesion coefficient"], ans:1, topic:"Lotus Effect & Self-Cleaning Surfaces"},
+      {q:"In bird flight, what is the primary purpose of \"streamlining\" the body?", opts:["To increase weight for diving","To reduce drag (air resistance)","To absorb more solar energy","To improve camouflage"], ans:1, topic:"Bird & Aircraft Flight"},
+      {q:"What aerodynamic force acts opposite to the weight of a bird during flight?", opts:["Thrust","Drag","Lift","Gravity"], ans:2, topic:"Bird & Aircraft Flight"},
+      {q:"What structural feature causes water to form spherical droplets on a lotus leaf?", opts:["Large visible pores","Micro- and nanoscale wax-covered bumps","A completely smooth surface","Magnetic fields within the leaf"], ans:1, topic:"Lotus Effect & Self-Cleaning Surfaces"},
+      {q:"What is the primary function of prickly or sticky structures on plant burrs?", opts:["To prevent water loss","To aid in photosynthesis","To attach to animal fur for dispersal","To protect against herbivores"], ans:2, topic:"Biomimicry: Velcro & Burrs"},
+      {q:"Which plant inspired the invention of Velcro?", opts:["Sunflower","Burdock","Dandelion","Rose"], ans:1, topic:"Biomimicry: Velcro & Burrs"},
+      {q:"What scientific principle describes the design of Velcro, where human technology mimics natural structures?", opts:["Ecology","Taxonomy","Biomimicry","Morphology"], ans:2, topic:"Biomimicry: Velcro & Burrs"},
+      {q:"Under a microscope, what structure did George de Mestral observe on the burrs?", opts:["Tiny suction cups","Sticky glue glands","Tiny hooks","Soft hairs"], ans:2, topic:"Biomimicry: Velcro & Burrs"},
+      {q:"What are the two components of a Velcro fastener?", opts:["Two hook-covered sides","Two loop-covered sides","A hook side and a loop side","A magnetic side and a metal side"], ans:2, topic:"Biomimicry: Velcro & Burrs"},
+      {q:"Which industry helped make Velcro popular by using it in space missions?", opts:["Fashion","NASA (Aerospace)","Automobile","Agriculture"], ans:1, topic:"Biomimicry: Velcro & Burrs"},
+      {q:"What is the primary component of shark skin that helps reduce drag?", opts:["Mucus layer","Dermal denticles","Soft cartilaginous scales","Smooth skin pores"], ans:1, topic:"Shark Skin & Drag Reduction"},
+      {q:"Dermal denticles on a shark's skin are structurally most similar to", opts:["Fish scales","Human teeth","Reptile skin","Bird feathers"], ans:1, topic:"Shark Skin & Drag Reduction"},
+      {q:"In which direction are the tooth-like denticles on a shark oriented to reduce drag?", opts:["Perpendicular to the water flow","Irregularly across the body","Towards the head","Towards the tail"], ans:3, topic:"Shark Skin & Drag Reduction"},
+      {q:"How do shark denticles work to reduce drag?", opts:["By absorbing water to become heavier","By creating a high-pressure zone around the shark","By creating tiny riblets that reduce turbulence","By producing heat to reduce water viscosity"], ans:2, topic:"Shark Skin & Drag Reduction"},
+      {q:"What is the main, non-drag-reduction advantage of shark skin denticles?", opts:["Increased visibility","Improved camouflage","Protection against injury and bacterial growth","Increased buoyancy"], ans:2, topic:"Shark Skin & Drag Reduction"},
+      {q:"When did full-body shark skin-inspired swimsuits become highly prominent in competitive swimming, leading to numerous records?", opts:["1996 Atlanta Olympics","2000 Sydney Olympics","2008 Beijing Olympics","2012 London Olympics"], ans:2, topic:"Shark Skin & Drag Reduction"},
+      {q:"Why were some high-tech, shark-skin-inspired, full-body swimsuits later banned by FINA?", opts:["They were too expensive","They caused skin rashes","They provided an unfair advantage (technological doping)","They degraded too quickly in salt water"], ans:2, topic:"Shark Skin & Drag Reduction"},
+      {q:"What are the two primary types of blood substitutes under development?", opts:["Plasma expanders and platelets","Hemoglobin-based oxygen carriers (HBOCs) and perfluorocarbon (PFC) emulsions","Albumin and saline","White blood cells and red blood cells"], ans:1, topic:"Artificial Blood Substitutes"},
+      {q:"Perfluorocarbon (PFC) emulsions work by", opts:["Binding with iron","Acting as an antibody","Dissolving and delivering oxygen","Replacing clotting factors"], ans:2, topic:"Artificial Blood Substitutes"},
+      {q:"Which of the following is a key component of hemoglobin-based oxygen carriers (HBOCs)?", opts:["Synthetic polymers","Plant-based hemoglobin","Human or bovine hemoglobin","Silicone emulsions"], ans:2, topic:"Artificial Blood Substitutes"},
+      {q:"Why are blood substitutes considered \"oxygen therapeutics\" rather than true \"artificial blood\"?", opts:["They do not carry oxygen","They do not possess the immune functions or clotting capabilities of real blood","They are only used for white blood cell replacement","They are derived from synthetic materials only"], ans:1, topic:"Artificial Blood Substitutes"},
+      {q:"Which of the following is a limitation of current blood substitutes?", opts:["They are extensively used in, and restricted to, battlefield injuries","They have limited clinical use and are mostly experimental","They are too cheap to be effective","They cannot transport any oxygen"], ans:1, topic:"Artificial Blood Substitutes"},
+      {q:"Perfluorocarbon emulsions are known for having high solubility for which gas?", opts:["Carbon dioxide","Nitrogen","Oxygen","Helium"], ans:2, topic:"Artificial Blood Substitutes"},
+      {q:"Which of the following is NOT a primary purpose of blood substitutes?", opts:["Oxygen transport","Volume expansion","Long-term immune protection","Temporary blood replacement"], ans:2, topic:"Artificial Blood Substitutes"},
+      {q:"What are the two main types of artificial blood substitutes currently being developed?", opts:["Plasma substitutes and Platelet substitutes","HBOCs and PFCs","Artificial WBCs and Synthetic Plasma","Stem cell blood and Stem cell platelets"], ans:1, topic:"Artificial Blood Substitutes"},
+      {q:"Which of the following is a major advantage of using artificial blood?", opts:["They have a very short shelf life","They require refrigeration at all times","They are universally compatible (no cross-matching required)","They have higher risk of infection than real blood"], ans:2, topic:"Artificial Blood Substitutes"},
+      {q:"Perfluorocarbons (PFCs) carry oxygen by", opts:["Binding to iron in hemoglobin","Dissolving high volumes of gases, including oxygen","Using synthetic platelets","Producing oxygen through chemical reaction"], ans:1, topic:"Artificial Blood Substitutes"},
+      {q:"What is the primary limitation or side effect associated with HBOCs?", opts:["Inability to carry oxygen","High risk of infection","Vasoconstriction and oxidative stress","They cannot be stored at room temperature"], ans:2, topic:"Artificial Blood Substitutes"},
+      {q:"How are PFC emulsions finally removed from the body?", opts:["Through urine only","By being broken down by the spleen","Exhaled through the lungs","They are not removed"], ans:2, topic:"Artificial Blood Substitutes"},
+      {q:"Respirocytes, a type of artificial red blood cell, are best described as", opts:["Natural bacteria","Nanobots","Modified bovine cells","Gelatin-based particles"], ans:1, topic:"Artificial Blood Substitutes"},
+      {q:"Which component is crucial for stabilizing PFCs for intravenous injection?", opts:["Emulsifiers","Alcohol","Pure water","Iron powder"], ans:0, topic:"Artificial Blood Substitutes"},
+      {q:"Artificial blood is generally superior to donated blood regarding", opts:["Oxygen transport efficiency","Shelf life","Clotting ability","Immune system function"], ans:1, topic:"Artificial Blood Substitutes"},
+      {q:"The first widely available PFC emulsion was known as", opts:["Hemopure","Fluosol","Oxygent","PolyHeme"], ans:1, topic:"Artificial Blood Substitutes"},
+      {q:"What is a key challenge in the development of artificial blood?", opts:["Ensuring long-term storage","Making it inexpensive","Mimicking all functions of natural blood (including clotting and immunity)","All of the above"], ans:3, topic:"Artificial Blood Substitutes"}
+    ]
+  },
+  {
+    name: "Module 5: Regenerative Medicine & Smart Sensing Tech",
+    questions: [
+      {q:"The primary purpose of tissue engineering is to", opts:["Manufacture synthetic drugs","Replace or regenerate damaged tissues","Produce vaccines","Increase food production"], ans:1, topic:"Tissue Engineering & Scaffolds"},
+      {q:"A scaffold in tissue engineering is used to", opts:["Destroy infected tissue","Support cell attachment and growth","Deliver electrical signals","Store genetic material"], ans:1, topic:"Tissue Engineering & Scaffolds"},
+      {q:"Which device provides a controlled environment for tissue growth?", opts:["Incubator","Autoclave","Bioreactor","Centrifuge"], ans:2, topic:"Tissue Engineering & Scaffolds"},
+      {q:"Stem cells that can differentiate into almost any cell type are called", opts:["Multipotent","Totipotent","Pluripotent","Unipotent"], ans:2, topic:"Stem Cells"},
+      {q:"Induced pluripotent stem cells (iPSCs) were developed by", opts:["Paul Rothemund","Shinya Yamanaka","Louis Pasteur","Robert Hooke"], ans:1, topic:"Stem Cells"},
+      {q:"Adult stem cells are generally classified as", opts:["Pluripotent","Totipotent","Multipotent","Omnipotent"], ans:2, topic:"Stem Cells"},
+      {q:"Bioprinting primarily involves printing with", opts:["Plastic filaments","Metal powders","Bioinks containing living cells","Silicon wafers"], ans:2, topic:"Bioprinting"},
+      {q:"Which of the following is commonly used as a bioink material?", opts:["Alginate","Steel","Copper","Silicon"], ans:0, topic:"Bioprinting"},
+      {q:"Laser-assisted bioprinting is mainly used for", opts:["Metal welding","High-precision cell placement","Water purification","Soil testing"], ans:1, topic:"Bioprinting"},
+      {q:"An electronic tongue is mainly used to detect", opts:["Light intensity","Taste compounds in liquids","Sound waves","Magnetic fields"], ans:1, topic:"Electronic Tongue & Nose"},
+      {q:"An electronic nose detects", opts:["Solid particles","Volatile gases and aroma compounds","Radiation","Heat energy"], ans:1, topic:"Electronic Tongue & Nose"},
+      {q:"One major application of electronic nose technology is", opts:["Weather forecasting","Food spoilage detection","Blood pressure measurement","DNA sequencing"], ans:1, topic:"Electronic Tongue & Nose"},
+      {q:"DNA origami involves", opts:["Cutting DNA randomly","Folding DNA into nanoscale shapes","Amplifying DNA","Destroying genetic material"], ans:1, topic:"DNA Origami & Biocomputing"},
+      {q:"DNA origami was pioneered by", opts:["Shinya Yamanaka","James Watson","Paul Rothemund","Gregor Mendel"], ans:2, topic:"DNA Origami & Biocomputing"},
+      {q:"Biocomputing uses which molecule for computation?", opts:["Glucose","DNA","Hemoglobin","Collagen"], ans:1, topic:"DNA Origami & Biocomputing"},
+      {q:"MRI is primarily used to", opts:["Measure blood sugar","Visualize internal body structures","Sterilize equipment","Print tissues"], ans:1, topic:"Medical Imaging & AI"},
+      {q:"Artificial Intelligence in medical imaging helps in", opts:["Cooking food","Tumor detection","Water purification","Cement production"], ans:1, topic:"Medical Imaging & AI"},
+      {q:"Deep learning in healthcare is especially useful for", opts:["Pattern recognition in images","Mechanical repair","Chemical synthesis","Concrete mixing"], ans:0, topic:"Medical Imaging & AI"},
+      {q:"Bio concrete repairs cracks using", opts:["Viruses","Fungi","Bacteria producing calcium carbonate","Plastic fibers"], ans:2, topic:"Bio Concrete"},
+      {q:"The main advantage of bio concrete is", opts:["Increased color brightness","Self-healing property","Faster drying time only","Reduced weight"], ans:1, topic:"Bio Concrete"},
+      {q:"The ideal scaffold in tissue engineering should be", opts:["Toxic and rigid","Biodegradable and biocompatible","Electrically conductive only","Non-porous"], ans:1, topic:"Tissue Engineering & Scaffolds"},
+      {q:"Growth factors in tissue engineering mainly", opts:["Kill unwanted cells","Stimulate cell proliferation and differentiation","Prevent oxygen supply","Increase scaffold weight"], ans:1, topic:"Tissue Engineering & Scaffolds"},
+      {q:"Decellularized extracellular matrix (dECM) is used because it", opts:["Is synthetic plastic","Contains natural biological cues","Is electrically active","Is metallic"], ans:1, topic:"Tissue Engineering & Scaffolds"},
+      {q:"Cartilage repair is difficult because cartilage is", opts:["Highly vascular","Non-living tissue","Poorly vascularized","Electrically inactive"], ans:2, topic:"Tissue Engineering & Scaffolds"},
+      {q:"Which field closely supports tissue engineering?", opts:["Thermodynamics","Biomaterials science","Astrophysics","Geology"], ans:1, topic:"Tissue Engineering & Scaffolds"},
+      {q:"Hematopoietic stem cells are mainly found in", opts:["Liver","Brain","Bone marrow","Skin"], ans:2, topic:"Stem Cells"},
+      {q:"Totipotent cells can form", opts:["Only muscle cells","Entire organism including placenta","Only blood cells","Only neurons"], ans:1, topic:"Stem Cells"},
+      {q:"A major advantage of induced pluripotent stem cells (iPSCs) is", opts:["Ethical acceptance compared to embryonic stem cells","Faster aging","Inability to divide","High toxicity"], ans:0, topic:"Stem Cells"},
+      {q:"Stem cell therapy is widely used in treating", opts:["Leukemia","Fractured bones only","Tooth decay","Common cold"], ans:0, topic:"Stem Cells"},
+      {q:"The process by which stem cells become specialized cells is called", opts:["Fermentation","Differentiation","Mutation","Cloning"], ans:1, topic:"Stem Cells"},
+      {q:"Extrusion-based bioprinting works by", opts:["Spraying cells randomly","Forcing bioink through a nozzle","Using magnets","Burning materials"], ans:1, topic:"Bioprinting"},
+      {q:"Hydrogels are suitable bioinks because they", opts:["Are very hard","Mimic natural extracellular matrix","Are metallic","Conduct electricity strongly"], ans:1, topic:"Bioprinting"},
+      {q:"One limitation of bioprinting organs is", opts:["Lack of colors","Difficulty in vascularization","Low temperature requirement","Excess metal use"], ans:1, topic:"Bioprinting"},
+      {q:"Inkjet bioprinting is advantageous because it", opts:["Is low cost and precise","Uses heavy metals","Is very slow","Destroys cells"], ans:0, topic:"Bioprinting"},
+      {q:"Organoids are", opts:["Artificial robots","Miniature 3D tissue models","DNA fragments","Chemical sensors"], ans:1, topic:"Bioprinting"},
+      {q:"Electronic tongue systems mainly rely on", opts:["Thermal sensors","Sensor arrays and pattern recognition","Magnetic fields","Microscopes"], ans:1, topic:"Electronic Tongue & Nose"},
+      {q:"Metal oxide sensors are commonly used in", opts:["Electronic nose","Tissue scaffolds","DNA origami","MRI machines"], ans:0, topic:"Electronic Tongue & Nose"},
+      {q:"Electronic nose technology is useful in", opts:["Detecting gas leaks","Space travel only","Printing tissues","Bone repair"], ans:0, topic:"Electronic Tongue & Nose"},
+      {q:"The working principle of electronic tongue is similar to", opts:["Human taste buds","Human lungs","Kidney filtration","Bone marrow"], ans:0, topic:"Electronic Tongue & Nose"},
+      {q:"In food science, electronic tongue helps in", opts:["Measuring texture","Standardizing taste quality","Increasing calorie content","Freezing food"], ans:1, topic:"Electronic Tongue & Nose"},
+      {q:"DNA origami structures operate at which scale?", opts:["Meter scale","Micrometer scale","Nanometer scale","Kilometer scale"], ans:2, topic:"DNA Origami & Biocomputing"},
+      {q:"DNA-based logic gates are used in", opts:["Biocomputing","Cement mixing","Weather forecasting","Mechanical engines"], ans:0, topic:"DNA Origami & Biocomputing"},
+      {q:"DNA data storage is attractive because DNA has", opts:["Low storage density","High storage density","No stability","Short lifespan"], ans:1, topic:"DNA Origami & Biocomputing"},
+      {q:"A key advantage of biocomputing over silicon computing is", opts:["Large physical size","High energy consumption","Massive parallel processing","Heavy weight"], ans:2, topic:"DNA Origami & Biocomputing"},
+      {q:"PET scans are mainly used to study", opts:["Bone hardness","Metabolic activity","Hair growth","Skin color"], ans:1, topic:"Medical Imaging & AI"},
+      {q:"AI algorithms in radiology mainly reduce", opts:["Oxygen supply","Human error","Equipment size","Blood pressure"], ans:1, topic:"Medical Imaging & AI"},
+      {q:"Convolutional Neural Networks (CNNs) are commonly used for", opts:["Image analysis","Cement mixing","Tissue drying","Water purification"], ans:0, topic:"Medical Imaging & AI"},
+      {q:"Bacteria in bio concrete produce", opts:["Silicon dioxide","Calcium carbonate","Sodium chloride","Plastic polymers"], ans:1, topic:"Bio Concrete"},
+      {q:"Bio concrete increases the lifespan of structures by", opts:["Changing color","Self-sealing cracks","Reducing height","Increasing brittleness"], ans:1, topic:"Bio Concrete"},
+      {q:"The main trigger for bacterial activation in bio concrete is", opts:["Heat","Light","Water entering cracks","Wind pressure"], ans:2, topic:"Bio Concrete"}
+    ]
+  }
+  // All 5 modules are now loaded.
+];
+
+let currentModuleIndex = 0;
+let quizQuestions = [];
+let quizState = []; // per-question: {wrongTries:[idx], solvedIndex:null, firstAttempt:null, firstAttemptCorrect:null}
+let currentIndex = 0;
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+// Returns a clone of q with its options reshuffled and `ans` remapped to match.
+function shuffleQuestionOptions(q){
+  const order = shuffle(q.opts.map((_,i)=>i)); // shuffled list of original indices
+  const newOpts = order.map(i=>q.opts[i]);
+  const newAns = order.indexOf(q.ans);
+  return {q:q.q, topic:q.topic, opts:newOpts, ans:newAns};
+}
+
+const STORAGE_KEY = "bioQuizProgress_v1";
+
+function saveProgress(){
+  try{
+    const snapshot = {
+      moduleIndex: currentModuleIndex,
+      topic: document.getElementById("topicFilter").value,
+      quizQuestions: quizQuestions,
+      quizState: quizState,
+      currentIndex: currentIndex
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+  }catch(e){ /* storage unavailable — fail silently */ }
+}
+
+function clearProgress(){
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+}
+
+function loadProgress(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const snap = JSON.parse(raw);
+    if(typeof snap.moduleIndex !== "number" || !modules[snap.moduleIndex]) return false;
+    if(!Array.isArray(snap.quizQuestions) || !Array.isArray(snap.quizState)) return false;
+    if(snap.quizQuestions.length === 0 || snap.quizQuestions.length !== snap.quizState.length) return false;
+
+    currentModuleIndex = snap.moduleIndex;
+    quizQuestions = snap.quizQuestions;
+    quizState = snap.quizState;
+    currentIndex = Math.min(Math.max(snap.currentIndex || 0, 0), quizQuestions.length - 1);
+
+    document.getElementById("moduleSelect").value = currentModuleIndex;
+    populateTopicFilter();
+    document.getElementById("topicFilter").value = snap.topic || "all";
+    document.getElementById("moduleTitle").textContent = modules[currentModuleIndex].name;
+    document.getElementById("moduleSub").textContent = `${modules[currentModuleIndex].questions.length} MCQs`;
+    document.getElementById("quizView").style.display = "block";
+    document.getElementById("summaryView").style.display = "none";
+    renderDots();
+    renderQuestion();
+    return true;
+  }catch(e){ return false; }
+}
+
+function populateModuleSelect(){
+  const sel = document.getElementById("moduleSelect");
+  sel.innerHTML = "";
+  modules.forEach((m, idx)=>{
+    const opt = document.createElement("option");
+    opt.value = idx;
+    opt.textContent = m.name;
+    sel.appendChild(opt);
+  });
+}
+
+function populateTopicFilter(){
+  const sel = document.getElementById("topicFilter");
+  const topics = [...new Set(modules[currentModuleIndex].questions.map(q=>q.topic))];
+  sel.innerHTML = `<option value="all">All topics (shuffled)</option>`;
+  topics.forEach(t=>{
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t;
+    sel.appendChild(opt);
+  });
+}
+
+function startQuiz(topic){
+  const mod = modules[currentModuleIndex];
+  document.getElementById("moduleTitle").textContent = mod.name;
+  document.getElementById("moduleSub").textContent = `${mod.questions.length} MCQs`;
+  let pool = topic==="all" ? mod.questions : mod.questions.filter(q=>q.topic===topic);
+  quizQuestions = shuffle(pool).map(shuffleQuestionOptions);
+  quizState = quizQuestions.map(()=>({wrongTries:[], solvedIndex:null, firstAttempt:null, firstAttemptCorrect:null}));
+  currentIndex = 0;
+  document.getElementById("quizView").style.display = "block";
+  document.getElementById("summaryView").style.display = "none";
+  renderDots();
+  renderQuestion();
+  saveProgress();
+}
+
+function renderDots(){
+  const dotNav = document.getElementById("dotNav");
+  dotNav.innerHTML = "";
+  quizQuestions.forEach((q, idx)=>{
+    const d = document.createElement("div");
+    const st = quizState[idx];
+    let cls = "dot";
+    if(idx === currentIndex) cls += " current";
+    if(st.firstAttemptCorrect === true) cls += " correct";
+    else if(st.firstAttemptCorrect === false) cls += " wrong";
+    d.className = cls;
+    d.textContent = idx+1;
+    d.onclick = ()=>{ currentIndex = idx; renderQuestion(); };
+    dotNav.appendChild(d);
+  });
+}
+
+function computeScore(){
+  let correct = 0, attempted = 0;
+  quizState.forEach(st=>{
+    if(st.firstAttemptCorrect !== null){
+      attempted++;
+      if(st.firstAttemptCorrect) correct++;
+    }
+  });
+  return {correct, attempted};
+}
+
+function renderQuestion(){
+  const q = quizQuestions[currentIndex];
+  const st = quizState[currentIndex];
+  document.getElementById("qTopic").textContent = q.topic;
+  document.getElementById("qText").textContent = `${currentIndex+1}. ${q.q}`;
+  document.getElementById("qFeedback").textContent = st.solvedIndex !== null
+    ? (st.firstAttemptCorrect ? "Correct on first try!" : "Correct answer found — noted as a miss on your first attempt.")
+    : (st.wrongTries.length > 0 ? "Try again — eliminate the wrong ones." : "");
+
+  const {correct, attempted} = computeScore();
+  document.getElementById("liveScore").textContent = `Score: ${correct} / ${attempted}`;
+  document.getElementById("progressBar").style.width = `${(attempted/quizQuestions.length)*100}%`;
+
+  const optsDiv = document.getElementById("qOptions");
+  optsDiv.innerHTML = "";
+  const letters = ["A","B","C","D"];
+  q.opts.forEach((optText, idx)=>{
+    const btn = document.createElement("button");
+    btn.className = "option";
+    btn.textContent = `${letters[idx]}) ${optText}`;
+    btn.onclick = ()=>selectAnswer(idx);
+
+    if(st.solvedIndex !== null){
+      btn.disabled = true;
+      if(idx === q.ans) btn.classList.add("correct");
+      else if(st.wrongTries.includes(idx)) btn.classList.add("wrong");
+    } else if(st.wrongTries.includes(idx)){
+      btn.disabled = true;
+      btn.classList.add("wrong");
+    }
+    optsDiv.appendChild(btn);
+  });
+
+  document.getElementById("prevBtn").disabled = (currentIndex === 0);
+  const nextBtn = document.getElementById("nextBtn");
+  nextBtn.disabled = (st.solvedIndex === null);
+  nextBtn.textContent = (currentIndex === quizQuestions.length - 1) ? "Finish →" : "Next →";
+
+  renderDots();
+}
+
+function selectAnswer(idx){
+  const q = quizQuestions[currentIndex];
+  const st = quizState[currentIndex];
+  if(st.solvedIndex !== null) return;
+  if(st.wrongTries.includes(idx)) return;
+
+  if(st.firstAttempt === null){
+    st.firstAttempt = idx;
+    st.firstAttemptCorrect = (idx === q.ans);
+  }
+
+  if(idx === q.ans){
+    st.solvedIndex = idx;
+  } else {
+    st.wrongTries.push(idx);
+  }
+  renderQuestion();
+  saveProgress();
+}
+
+document.getElementById("prevBtn").onclick = ()=>{
+  if(currentIndex > 0){ currentIndex--; renderQuestion(); saveProgress(); }
+};
+
+document.getElementById("nextBtn").onclick = ()=>{
+  if(currentIndex >= quizQuestions.length - 1){
+    showSummary();
+  } else {
+    currentIndex++;
+    renderQuestion();
+    saveProgress();
+  }
+};
+
+function showSummary(){
+  document.getElementById("quizView").style.display = "none";
+  document.getElementById("summaryView").style.display = "block";
+  clearProgress();
+  const {correct, attempted} = computeScore();
+  const pct = Math.round((correct/quizQuestions.length)*100);
+  document.getElementById("finalScore").textContent = `${correct}/${quizQuestions.length}`;
+
+  let msg = "";
+  if(pct >= 90) msg = "Excellent! You've got this module down.";
+  else if(pct >= 70) msg = "Solid grasp — review the misses below.";
+  else if(pct >= 50) msg = "Decent start — a bit more review will help.";
+  else msg = "Worth another pass through the material.";
+  document.getElementById("finalMsg").textContent = `${pct}% on first attempt — ${msg}`;
+
+  const topicStats = {};
+  const missed = [];
+  quizQuestions.forEach((q, idx)=>{
+    const st = quizState[idx];
+    if(!topicStats[q.topic]) topicStats[q.topic] = {correct:0, total:0};
+    topicStats[q.topic].total++;
+    if(st.firstAttemptCorrect) topicStats[q.topic].correct++;
+    else if(st.firstAttemptCorrect === false){
+      missed.push({q:q.q, yours:q.opts[st.firstAttempt], correct:q.opts[q.ans]});
+    }
+  });
+
+  const breakdownDiv = document.getElementById("breakdown");
+  breakdownDiv.innerHTML = "<div style='font-weight:700;margin-bottom:6px;color:var(--text);'>By topic</div>";
+  Object.keys(topicStats).forEach(topic=>{
+    const s = topicStats[topic];
+    const row = document.createElement("div");
+    row.className = "breakdown-row";
+    row.innerHTML = `<span>${topic}</span><span>${s.correct} / ${s.total}</span>`;
+    breakdownDiv.appendChild(row);
+  });
+
+  const missedDiv = document.getElementById("missedList");
+  missedDiv.innerHTML = "";
+  if(missed.length > 0){
+    const header = document.createElement("div");
+    header.style.fontWeight = "700";
+    header.style.marginBottom = "8px";
+    header.style.color = "var(--text)";
+    header.textContent = "Review these (missed on first attempt)";
+    missedDiv.appendChild(header);
+    missed.forEach(m=>{
+      const item = document.createElement("div");
+      item.className = "missed-item";
+      item.innerHTML = `<div class="q">${m.q}</div><div class="y">Your first pick: ${m.yours}</div><div class="a">Correct: ${m.correct}</div>`;
+      missedDiv.appendChild(item);
+    });
+  }
+}
+
+document.getElementById("restartBtn").onclick = ()=>{
+  startQuiz(document.getElementById("topicFilter").value);
+};
+
+document.getElementById("topicFilter").onchange = (e)=>{
+  startQuiz(e.target.value);
+};
+
+document.getElementById("moduleSelect").onchange = (e)=>{
+  currentModuleIndex = parseInt(e.target.value, 10);
+  populateTopicFilter();
+  startQuiz("all");
+};
+
+document.addEventListener("keydown", (e)=>{
+  if(document.getElementById("quizView").style.display === "none") return;
+  const tag = (document.activeElement && document.activeElement.tagName) || "";
+  if(tag === "SELECT") return; // don't hijack keys while a dropdown is focused
+
+  if(["1","2","3","4"].includes(e.key)){
+    const idx = parseInt(e.key, 10) - 1;
+    const btns = document.querySelectorAll("#qOptions button.option");
+    if(btns[idx] && !btns[idx].disabled) btns[idx].click();
+  } else if(e.key === "ArrowLeft"){
+    document.getElementById("prevBtn").click();
+  } else if(e.key === "ArrowRight" || e.key === "Enter"){
+    e.preventDefault();
+    document.getElementById("nextBtn").click();
+  }
+});
+
+document.getElementById("resetLink").onclick = (e)=>{
+  e.preventDefault();
+  clearProgress();
+  startQuiz(document.getElementById("topicFilter").value);
+};
+
+populateModuleSelect();
+if(!loadProgress()){
+  populateTopicFilter();
+  startQuiz("all");
+}
+</script>
+</body>
+</html>
