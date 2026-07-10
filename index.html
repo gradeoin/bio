@@ -73,6 +73,9 @@
     font-family:'Patrick Hand', sans-serif;
   }
   select:disabled{ opacity:0.5; }
+  .restart-btn{
+    padding:6px 14px; font-size:0.85rem;
+  }
   .dots{
     display:flex; gap:6px; overflow-x:auto; padding:4px 2px 12px;
     scrollbar-width:thin;
@@ -199,6 +202,7 @@
     <div class="topbar">
       <select id="moduleSelect"></select>
       <select id="topicFilter"></select>
+      <button class="navbtn restart-btn" id="restartQuizBtn" type="button">↺ Restart</button>
     </div>
     <div class="dots" id="dotNav"></div>
     <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
@@ -218,7 +222,6 @@
     </div>
     <div class="note" id="noteLine"></div>
     <div class="hint">Pick an answer — if it's wrong, try again until you find the right one. Your score reflects your <em>first</em> attempt only. Options are shuffled each run, and your progress saves automatically. On a laptop: press 1–4 to answer, ← → to navigate.</div>
-    <div class="hint" style="margin-top:6px;"><a href="#" id="resetLink" style="color:var(--ink-soft);text-decoration:underline;">Reset saved progress</a></div>
   </div>
 
   <div id="summaryView" style="display:none;">
@@ -941,8 +944,11 @@ document.addEventListener("keydown", (e)=>{
   }
 });
 
-document.getElementById("resetLink").onclick = (e)=>{
-  e.preventDefault();
+document.getElementById("restartQuizBtn").onclick = ()=>{
+  const {attempted} = computeScore();
+  if(attempted > 0 && !confirm("Start this quiz over from question 1? Your current answers on this run will be cleared.")){
+    return;
+  }
   clearProgress();
   startQuiz(document.getElementById("topicFilter").value);
 };
