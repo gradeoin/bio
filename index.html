@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -204,6 +204,12 @@
     .option, button.navbtn{ min-height:44px; }
     .dot{ width:30px; height:30px; font-size:0.75rem; }
   }
+  .option:focus-visible, button.navbtn:focus-visible, .dot:focus-visible, select:focus-visible, a:focus-visible{
+    outline:3px solid var(--accent-dark); outline-offset:2px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
 </style>
 </head>
 <body>
@@ -230,7 +236,7 @@
       <span class="tag" id="qTopic">Topic</span>
       <div class="qtext" id="qText">Loading...</div>
       <div class="options" id="qOptions"></div>
-      <div class="feedback" id="qFeedback"></div>
+      <div class="feedback" id="qFeedback" aria-live="polite"></div>
       <div class="footer">
         <div class="score" id="liveScore">Score: 0 / 0</div>
         <div class="navbtns">
@@ -745,7 +751,12 @@ function renderDots(){
     else if(st.firstAttemptCorrect === false) cls += " wrong";
     d.className = cls;
     d.textContent = idx+1;
-    d.onclick = ()=>{ currentIndex = idx; renderQuestion(); setEncouragement(); saveProgress(); };
+    d.tabIndex = 0;
+    d.setAttribute("role", "button");
+    d.setAttribute("aria-label", `Go to question ${idx+1}`);
+    const jump = ()=>{ currentIndex = idx; renderQuestion(); setEncouragement(); saveProgress(); };
+    d.onclick = jump;
+    d.onkeydown = (e)=>{ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); jump(); } };
     if(idx === currentIndex) currentDot = d;
     dotNav.appendChild(d);
   });
