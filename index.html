@@ -173,20 +173,36 @@
     font-family:'Caveat', cursive; font-size:1.15rem; color:var(--bad); text-align:center;
     margin-top:8px; transform:rotate(-1deg); min-height:1.4em;
   }
+  .qcount{ font-size:0.85rem; color:var(--ink-soft); text-align:right; margin:-2px 2px 6px; }
+  .kbd-hint{ display:inline; }
+  .topbar-row2{ display:flex; gap:8px; align-items:center; }
+  .dots-wrap{ position:relative; }
+  .dots-wrap::before, .dots-wrap::after{
+    content:""; position:absolute; top:0; bottom:12px; width:14px; pointer-events:none;
+  }
+  .dots-wrap::before{ left:0; background:linear-gradient(90deg, var(--paper), transparent); }
+  .dots-wrap::after{ right:0; background:linear-gradient(270deg, var(--paper), transparent); }
 
+  @media (max-width:520px){
+    .topbar{ flex-wrap:wrap; gap:8px; }
+    .topbar-row2{ width:100%; }
+  }
   @media (max-width:420px){
     .card{ padding:20px 16px; }
     .header h1{ font-size:1.6rem; }
-    .qtext{ font-size:1.15rem; }
+    .qtext{ font-size:1.18rem; line-height:1.5; }
     .footer{ flex-direction:column; align-items:stretch; }
     .navbtns{ justify-content:space-between; }
     button.navbtn{ flex:1; padding:12px 14px; }
-    .topbar{ flex-direction:column; align-items:stretch; }
-    select{ width:100%; }
+    #moduleSelect{ width:100%; }
+    .topbar-row2 select{ flex:1; min-width:0; }
+    .restart-btn{ flex:0 0 auto; }
     .option{ padding:14px 14px; }
+    .kbd-hint{ display:none; }
   }
   @media (hover:none){
-    .option, button.navbtn, .dot{ min-height:44px; }
+    .option, button.navbtn{ min-height:44px; }
+    .dot{ width:30px; height:30px; font-size:0.75rem; }
   }
 </style>
 </head>
@@ -201,10 +217,13 @@
   <div id="quizView">
     <div class="topbar">
       <select id="moduleSelect"></select>
-      <select id="topicFilter"></select>
-      <button class="navbtn restart-btn" id="restartQuizBtn" type="button">↺ Restart</button>
+      <div class="topbar-row2">
+        <select id="topicFilter"></select>
+        <button class="navbtn restart-btn" id="restartQuizBtn" type="button">↺ Restart</button>
+      </div>
     </div>
-    <div class="dots" id="dotNav"></div>
+    <div class="dots-wrap"><div class="dots" id="dotNav"></div></div>
+    <div class="qcount" id="qCount"></div>
     <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
 
     <div class="card">
@@ -221,7 +240,7 @@
       </div>
     </div>
     <div class="note" id="noteLine"></div>
-    <div class="hint">Pick an answer — if it's wrong, try again until you find the right one. Your score reflects your <em>first</em> attempt only. Options are shuffled each run, and your progress saves automatically. On a laptop: press 1–4 to answer, ← → to navigate.</div>
+    <div class="hint">Pick an answer — if it's wrong, try again until you find the right one. Your score reflects your <em>first</em> attempt only. Options are shuffled each run, and your progress saves automatically. <span class="kbd-hint">On a laptop: press 1–4 to answer, ← → to navigate.</span></div>
   </div>
 
   <div id="summaryView" style="display:none;">
@@ -716,6 +735,7 @@ function startQuiz(topic){
 function renderDots(){
   const dotNav = document.getElementById("dotNav");
   dotNav.innerHTML = "";
+  let currentDot = null;
   quizQuestions.forEach((q, idx)=>{
     const d = document.createElement("div");
     const st = quizState[idx];
@@ -726,8 +746,10 @@ function renderDots(){
     d.className = cls;
     d.textContent = idx+1;
     d.onclick = ()=>{ currentIndex = idx; renderQuestion(); setEncouragement(); saveProgress(); };
+    if(idx === currentIndex) currentDot = d;
     dotNav.appendChild(d);
   });
+  if(currentDot) currentDot.scrollIntoView({ block:"nearest", inline:"center" });
 }
 
 function setEncouragement(customText){
@@ -773,6 +795,7 @@ function renderQuestion(){
 
   const streak = currentStreak();
   document.getElementById("streakLine").textContent = streak >= 3 ? `🔥 ${streak} in a row` : "";
+  document.getElementById("qCount").textContent = `Question ${currentIndex+1} of ${quizQuestions.length}`;
 
   const optsDiv = document.getElementById("qOptions");
   optsDiv.innerHTML = "";
